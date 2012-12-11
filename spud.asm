@@ -68,7 +68,6 @@ restart
 	jsr		arrow_create	; create an arrow
 ;
 main
-;	jsr		start_one_vectrex_round	 ; needed?
 	jsr 	Wait_Recal
 	jsr 	Intensity_3F
 	lda		#127
@@ -89,16 +88,15 @@ main
 	bne		cantscore
 	jsr		check_if_score
 cantscore
-	jsr		draw_mollysface ; TODO
+	;jsr		draw_mollysface ; TODO
 	jsr		draw_mollyslegs 
 	jsr		draw_spud
-	jsr		draw_spudslegs 	; TODO
+	;jsr		draw_spudslegs 	; TODO
 
-	jsr 	arrow_in_bounds  ; check if it's at legal pos
 	jsr		Reset0Int
 	jsr		draw_arrow
 
-;	jsr 	check_arrow_hit
+; collision
 	ldx		arrow_coor
 	ldy		spud_coor
 	lda		#20			; MUST fix ; spud h/2

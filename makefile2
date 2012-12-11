@@ -1,6 +1,0 @@
-AS=/usr/local/bin/as6809
-
-all :
-	$(AS) spud2.asm -o spud2.hex 
-	hex2bin -e bin spud2.hex
-

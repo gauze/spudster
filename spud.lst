@@ -1,7 +1,0 @@
-AS09 Assembler for M6809 [1.42].                                     Page    1
----------------------------------- spud.asm ----------------------------------
-
-34:	hcf	
-"functions.i",34 : Invalid mnemonic.
-1329 lines read, 1 error in pass 1.
-
