@@ -27,21 +27,18 @@ show_score
 	jsr		Print_Str_d		
 	rts
 ;
-show_level
-	ldu		level
-	lda		#-20
-	ldb		#-100
-	jsr		Print_Str_d		
-	rts
-;
 inc_score
-	inc		dec_score
+	ldd		#dec_score
+	addd	onepoint
+	std		dec_score
+	hcf	
 	lda		#1
 	ldx 	#score
 	jsr		Add_Score_a		
-	lda		level	; level
-	ldb		#50		; 50
-	mul				; times 
+
+	lda		level		; level
+	ldb		#50			; 50
+	mul					; times 
 	cmpd    dec_score
 	blt		nope
 	inc 	level	
@@ -110,14 +107,27 @@ draw_molly
 draw_mollysface
 ; TODO
 ; include bow animation?
+	lda 	#83
+	jsr		set_scale
+	ldx		#MollysFace
+	lda 	mollystate   	; if state !=1
+	beq		nothumpedface	; branch
+	ldx		#MollysFaceHum
+nothumpedface
+	jsr		Draw_VLp
 	rts
 ;
 draw_mollyslegs
 	lda 	#83
 	jsr		set_scale
-;	ldx		#MollysLegs
+	ldx		#MollysLegs
+	lda 	mollystate   ; if state !=1
+	beq		nothumped	 ; branch
 	ldx		#MollysLegsHum
+nothumped
 	jsr		Draw_VLp
+	lda		#0
+	sta		mollystate
 	rts
 ;
 
@@ -297,27 +307,31 @@ setup
 	jsr		vox_init
 	jsr 	Read_Btns		; no idea why this is here.
 	jsr 	Wait_Recal
+	lda		#1
+	sta		onepoint
 	rts		; return from function
 
 ;
 start
 	lda 	#3
 	sta 	spuds_left
-;	ldx 	[score]
-;	jsr		Clear_Score ; Bios routine yay
-	lda		#$30
-	sta		score
-	sta		score+1
-	sta		score+2
-	sta		score+3
-	sta		score+4
-	sta		score+5
-	lda		#$80
-	sta		score+6
+	ldx 	#score
+	jsr		Clear_Score ; Bios routine yay
+;	lda		#$30
+;	sta		score
+;	sta		score+1
+;	sta		score+2
+;	sta		score+3
+;	sta		score+4
+;	sta		score+5
+;	lda		#$80
+;	sta		score+6
 	lda		#0
 	sta 	spudstate
 	sta 	mollystate
-	lda 	#1
+	ldd 	#0
+	std		dec_score
+	lda 	#1	
 	sta 	level
 	lda		#-127
 	sta		spud_start

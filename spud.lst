@@ -1,8 +1,7 @@
 AS09 Assembler for M6809 [1.42].                                     Page    1
 ---------------------------------- spud.asm ----------------------------------
 
-1302 lines read, no errors in pass 1.
-No errors in pass 2.
-Wrote binary from address $0000 through $0582.
-Total size 1411 bytes.
+34:	hcf	
+"functions.i",34 : Invalid mnemonic.
+1329 lines read, 1 error in pass 1.
 

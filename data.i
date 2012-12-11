@@ -142,6 +142,10 @@ MollysLegsHum
 	fcb -1 , 7 , 7
 	fcb -1 , 0 , -12
 	fcb 1
+MollysFace
+	fcb 1
+MollysFaceHum
+	fcb 1
 Arrow		; only one not it 0x01 terminated format
 	fcb 7 
 	fcb 0,4 

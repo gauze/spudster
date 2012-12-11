@@ -38,6 +38,7 @@ maxbright	equ coord+2
 minbright	equ	maxbright+1
 count		equ minbright+1
 dec_score	equ count+1
+onepoint	equ	dec_score+2
 ;
 
 
@@ -88,8 +89,8 @@ main
 	bne		cantscore
 	jsr		check_if_score
 cantscore
-	jsr		draw_mollyslegs ; TODO
 	jsr		draw_mollysface ; TODO
+	jsr		draw_mollyslegs 
 	jsr		draw_spud
 	jsr		draw_spudslegs 	; TODO
 
@@ -116,6 +117,7 @@ arrow_speed
 	jsr 	move_arrow
 	deca 	
 	bne arrow_speed	
+	jsr 	arrow_in_bounds  ; check if it's at legal pos
 
 ; checking for game over condition...
 	lda		spuds_left
