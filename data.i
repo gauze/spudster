@@ -30,7 +30,7 @@ Spud
 	fcb -1, -3, 1
 	fcb -1, 3, 1
 	fcb 1 
-SpudHump 
+SpudHump ; needs work
 	fcb 1, 6, 6 
 	fcb -1, 0, 12
 	fcb -1, -6, 6
@@ -61,7 +61,7 @@ SpudHump
 	fcb -1, -3, 1
 	fcb -1, 3, 1
 	fcb 1 
-SpudDead 
+SpudDead ; TODO
 	fcb 1, 6, 6
 	fcb -1, 0, 12
 	fcb -1, -6, 6
@@ -92,6 +92,26 @@ SpudDead
 	fcb -1, -3, 1
 	fcb -1, 3, 1
 	fcb 1 
+SpudsLegs
+	fcb 0, 0, 10
+	fcb -1, -20, 0
+	fcb -1, 0, -10
+	fcb -1, 10, 10
+	fcb -1, 10, 0
+	fcb 0, 0, 10
+	fcb -1, -20, 0
+	fcb -1, 0, 10
+	fcb -1, 10, -10
+	fcb 1 
+SpudsLegsHum 
+	fcb 0 , 0 , 10
+	fcb -1 , -15 , -15
+	fcb -1 , 7 , -7
+	fcb -1 , 0 , 12
+	fcb 0 , 8 ,25
+	fcb -1 , -15 , 15
+	fcb -1 , 7 , 7
+	fcb -1 , 0 , -12
 Post 
 	fcb 0,0, -124
 	fcb -1,0, 124
@@ -169,8 +189,8 @@ hidden1str
 hidden2str
 	fcc "WARREN ROBINETT"
 	fcb 	$80
-scorestr
-	fcc "0000"
+highscorestr
+	fcc "HIGH SCORE"
 	fcb 	$80
 owstr
 	fcc "OW!!!"

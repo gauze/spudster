@@ -38,7 +38,7 @@ maxbright	equ coord+2
 minbright	equ	maxbright+1
 count		equ minbright+1
 dec_score	equ count+1
-onepoint	equ	dec_score+2
+highscore	equ	dec_score+7
 ;
 
 
@@ -61,8 +61,8 @@ onepoint	equ	dec_score+2
 ;;# end of magic init block.
 
 
-restart
 	jsr 	setup			; sets up what hardware to use and stuff
+restart
 	jsr		start
 	jsr 	titlescreen		; wait for button press here before start
 	jsr		arrow_create	; create an arrow

@@ -14,9 +14,9 @@
 arrow_create
 	lda		#127
 	sta		arrow_y		; height
-	jsr 	Random		; positive number 0-255
-	asra				; shift right, divide by /2 basically
-	sta		arrow_x  	; get random x coord
+	jsr 	Random		; -128-127
+	anda	#%01111111	; mask off 1st bit == positive numbers only
+	sta		arrow_x  	; set random x coord
 	rts
 	
 ; display score, once per frame ...
@@ -27,11 +27,17 @@ show_score
 	jsr		Print_Str_d		
 	rts
 ;
+show_highscore
+	ldu		#highscore
+	lda		#100
+	ldb		#-100
+	jsr		Print_Str_d		
+	rts
+;
 inc_score
-	ldd		#dec_score
-	addd	onepoint
+	ldd		dec_score ; decimal score stored as a reference
+	addd	#1
 	std		dec_score
-	hcf	
 	lda		#1
 	ldx 	#score
 	jsr		Add_Score_a		
@@ -39,8 +45,8 @@ inc_score
 	lda		level		; level
 	ldb		#50			; 50
 	mul					; times 
-	cmpd    dec_score
-	blt		nope
+	cmpd    dec_score	; if register > memory branch
+	bgt		nope
 	inc 	level	
 nope	
 	rts
@@ -80,8 +86,7 @@ arrow_in_bounds
 x_ok
 ; y test
 	lda		arrow_y
-	cmpa	#0
-	bne		y_ok
+	bpl		y_ok
 	bsr		arrow_create
 y_ok
 	rts
@@ -122,9 +127,9 @@ draw_mollyslegs
 	jsr		set_scale
 	ldx		#MollysLegs
 	lda 	mollystate   ; if state !=1
-	beq		nothumped	 ; branch
+	beq		nothumpeds	 ; branch
 	ldx		#MollysLegsHum
-nothumped
+nothumpeds
 	jsr		Draw_VLp
 	lda		#0
 	sta		mollystate
@@ -144,6 +149,16 @@ draw_spud
 ;
 draw_spudslegs
 ; TODO
+	lda 	#83
+	jsr		set_scale
+	ldx		#SpudsLegsHum
+	lda 	spudstate   ; if state !=1
+	beq		nothumped	 ; branch
+	ldx		#SpudsLegs
+nothumped
+	jsr		Draw_VLp
+	lda		#0
+	sta		spudstate
 	rts
 ;
 sound_update
@@ -153,6 +168,7 @@ sound_update
 
 move_arrow
 	dec		arrow_x
+	dec		arrow_y
 	dec		arrow_y
 	rts
 ;
@@ -196,6 +212,9 @@ got_hit
 ;
 loopy
 	jsr 	Delay_3
+	lda		#-10
+	ldb		#96
+	std		Vec_Text_HW
 	ldu		#owstr	
 	lda 	#0
 	ldb		#36	
@@ -208,10 +227,20 @@ gameoverloop
 	jsr 	Wait_Recal
 	jsr 	Intensity_3F
 	ldu		#gameoverstr
-	lda		#1
+	lda		#10
 	ldb		#206
 	jsr 	Print_Str_d 
 	jsr		show_score
+	ldx		#score
+	ldu		#highscore
+	jsr		New_High_Score
+	ldu		#highscorestr
+	lda		#127
+	ldb		#206
+	jsr 	Print_Str_d 
+	jsr		show_highscore
+	ldb		$FF
+	jsr		Delay_b
 	jsr 	Read_Btns
 	lda     Vec_Button_1_1
 	ora     Vec_Button_1_2
@@ -223,7 +252,7 @@ gameoverloop
 
 ;
 titlescreen
-	lda		%00000000
+	lda		#0
 	jsr		Read_Btns_Mask
 	lda		Vec_Button_1_1
 	bne 	main	
@@ -293,6 +322,8 @@ setup
 	lda 	#1 	; enable  joystick 1's x axis, disable all others.
 	sta 	Vec_Joy_Mux_1_X 	
 	sta		intlevel			; intensity level
+	ldx 	#highscore
+	jsr		Clear_Score ; Bios routine yay
 	lda		#64
 	sta		maxbright 			; max intensity
 	lda		#10
@@ -307,8 +338,6 @@ setup
 	jsr		vox_init
 	jsr 	Read_Btns		; no idea why this is here.
 	jsr 	Wait_Recal
-	lda		#1
-	sta		onepoint
 	rts		; return from function
 
 ;
@@ -317,15 +346,6 @@ start
 	sta 	spuds_left
 	ldx 	#score
 	jsr		Clear_Score ; Bios routine yay
-;	lda		#$30
-;	sta		score
-;	sta		score+1
-;	sta		score+2
-;	sta		score+3
-;	sta		score+4
-;	sta		score+5
-;	lda		#$80
-;	sta		score+6
 	lda		#0
 	sta 	spudstate
 	sta 	mollystate
