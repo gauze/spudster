@@ -1,4 +1,3 @@
-
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;< Spudster's Revenge - a Play in 3 acts                            <
 ;> by Brian Mastrobuono (gauze@dropdead.org)                        >
@@ -14,7 +13,7 @@
 arrow_create
 	lda		#127
 	sta		arrow_y		; height
-	jsr 	Random		; -128-127
+	jsr 	Random		; 
 	anda	#%01111111	; mask off 1st bit == positive numbers only
 	sta		arrow_x  	; set random x coord
 	rts
@@ -64,10 +63,12 @@ no_score
 ;
 level_up
 	inc		level
-; add more to increase game speed?
+; add more stuff to increase game speed?
 	rts
 ;
 draw_arrow
+	lda		#127
+	jsr		set_scale	
 	lda		arrow_y
 	ldb		arrow_x
 	jsr		Moveto_d
@@ -144,18 +145,26 @@ draw_spud
 	ldb		spud_xpos
 	jsr 	Moveto_d
 	ldx		#Spud	
+	lda 	spudstate   	; if state !=1
+	beq		nothumpedspud	; branch
+	ldx		#SpudHump
+nothumpedspud
 	jsr 	Draw_VLp
 	rts
 ;
-draw_spudslegs
-; TODO
-	lda 	#83
+draw_spudslegs		; wip
+	lda 	#127
 	jsr		set_scale
-	ldx		#SpudsLegsHum
+	ldx		#SpudsLegsWalk1
+	lda		spud_xpos
+	anda	#%000000001  ; mask 1 bit testing for odd number ...
+	bne		walk1
+	ldx		#SpudsLegsWalk2
+walk1
 	lda 	spudstate   ; if state !=1
-	beq		nothumped	 ; branch
-	ldx		#SpudsLegs
-nothumped
+	beq		nothumping	 ; branch
+	ldx		#SpudsLegsHum
+nothumping
 	jsr		Draw_VLp
 	lda		#0
 	sta		spudstate
@@ -187,7 +196,7 @@ going_right
 	lda 	spud_xpos
 	cmpa	#53
 	beq		done_moving 		; if >= 52 don't move.
-	inc		spud_xpos
+;	inc		spud_xpos
 	inc		spud_xpos
 	bra		done_moving		;end
 ;
@@ -195,7 +204,7 @@ going_left
 	lda		spud_xpos
 	cmpa	#-127
 	beq		done_moving
-	dec		spud_xpos
+;	dec		spud_xpos
 	dec		spud_xpos
 	bra		done_moving
 done_moving
@@ -219,6 +228,21 @@ loopy
 	lda 	#0
 	ldb		#36	
 	jsr 	Print_Str_d 	 
+; rotate spud	
+	lda		#127	
+	jsr 	set_scale 	
+	jsr		Reset0Int
+	lda		spud_ypos
+	ldb		spud_xpos
+	jsr 	Moveto_d
+	ldx		#Spud
+	ldu		#SpudRot
+	lda		count
+	ldb		28
+	jsr		Rot_VL_ab
+	ldx		#SpudRot
+	jsr 	Draw_VLp
+
 	dec		count
 	bne 	loopy
 	rts
@@ -231,15 +255,20 @@ gameoverloop
 	ldb		#206
 	jsr 	Print_Str_d 
 	jsr		show_score
-	ldx		#score
+	ldx		#score			; update highscore if needed
 	ldu		#highscore
 	jsr		New_High_Score
 	ldu		#highscorestr
 	lda		#127
 	ldb		#206
-	jsr 	Print_Str_d 
+	jsr 	Print_Str_d   	; print highscore label
 	jsr		show_highscore
-	ldb		$FF
+	ldx		#lolscore
+	ldu		#score
+	jsr		Compare_Score
+	cmpa	#0
+	beq		lol
+	ldb		$FF				; pause a little before taking button input
 	jsr		Delay_b
 	jsr 	Read_Btns
 	lda     Vec_Button_1_1
@@ -249,7 +278,19 @@ gameoverloop
 	lbne	restart
 	bra		gameoverloop
 ;
-
+lol	
+	ldu		#lolstring
+	lda		#10
+	ldb		#206
+	jsr 	Print_Str_d 
+	lda 	#127
+	jsr		set_scale
+	ldx		#lolgraphic
+	jsr		Draw_VLp
+	bra		lol
+	rts
+	
+	
 ;
 titlescreen
 	lda		#0
@@ -305,6 +346,7 @@ finish_pulse
 	jsr		Intensity_a		; set intensity here
 ; end intensity routine
 	ldu		#startstring
+;	ldu		#abcd			; REMOVE
 	lda		#-50
 	ldb		#-110
 	jsr		Print_Str_d
@@ -315,28 +357,28 @@ finish_pulse
 play_song
 	ldb		#1	;movqi: #1 -> R:b
 	stx		current_song	;movhi: R:x -> _current_song
+	sta		brightdir			; direction 0 down 1 up 
 	jsr		Do_Sound
 	rts		; return from function
 ;
 setup
 	lda 	#1 	; enable  joystick 1's x axis, disable all others.
 	sta 	Vec_Joy_Mux_1_X 	
-	sta		intlevel			; intensity level
 	ldx 	#highscore
 	jsr		Clear_Score ; Bios routine yay
 	lda		#64
 	sta		maxbright 			; max intensity
 	lda		#10
 	sta		minbright			; min intensity
-	lda 	#1 				; disable for Joy Mux's
-	sta		brightdir			; direction 0 down 1 up 
+	sta		intlevel			; intensity level
+	lda 	#0 				; disable for Joy Mux's
 	sta 	Vec_Joy_Mux_1_Y
 	sta 	Vec_Joy_Mux_2_X
 	sta 	Vec_Joy_Mux_2_Y
 	jsr 	Joy_Digital 	; set joymode, not analog.
 	lda 	#0
 	jsr		vox_init
-	jsr 	Read_Btns		; no idea why this is here.
+	;jsr 	Read_Btns		; no idea why this is here.
 	jsr 	Wait_Recal
 	rts		; return from function
 

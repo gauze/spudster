@@ -20,7 +20,7 @@ level 		equ score+7
 spuds_left 	equ level+1
 spud_ypos 	equ spuds_left+1  ; y
 spud_xpos	equ spud_ypos+1   ; x
-spud_coor	equ spud_ypos     ; for Object hit routine load into Y-reg
+spud_coor	equ spud_ypos     ; for Obj_Hit routine load into Y-reg
 spudstate 	equ spud_xpos+1 
 mollystate 	equ spudstate+1
 spud_start 	equ mollystate+1
@@ -28,7 +28,7 @@ spud_start 	equ mollystate+1
 ; missle
 arrow_y 	equ spud_start+2  ; y
 arrow_x 	equ arrow_y+1     ; x
-arrow_coor  equ arrow_y		  ; for Object_Hit routines load into X
+arrow_coor  equ arrow_y		  ; for Obj_Hit routines load into X
 ;								this routine take 2 bytes args
 
 intlevel 	equ arrow_x+1
@@ -39,8 +39,8 @@ minbright	equ	maxbright+1
 count		equ minbright+1
 dec_score	equ count+1
 highscore	equ	dec_score+7
+SpudRot		equ highscore+7
 ;
-
 
 ;]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 ;|             SETTING UP AND MAIN BLOCK                  |
@@ -59,7 +59,7 @@ highscore	equ	dec_score+7
     fcb    $80
 	fcb		$0
 ;;# end of magic init block.
-
+	
 
 	jsr 	setup			; sets up what hardware to use and stuff
 restart
@@ -91,7 +91,7 @@ cantscore
 	;jsr		draw_mollysface ; TODO
 	jsr		draw_mollyslegs 
 	jsr		draw_spud
-	;jsr		draw_spudslegs 	; TODO
+	jsr		draw_spudslegs 	; TODO
 
 	jsr		Reset0Int
 	jsr		draw_arrow

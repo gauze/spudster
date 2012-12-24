@@ -1,12 +1,12 @@
 ; DATA section
 Spud
-	fcb 1, 6, 6
+	fcb 1, 6, 6    	; body
 	fcb -1, 0, 12
 	fcb -1, -6, 6
 	fcb -1, -25, -7
 	fcb -1, 0, -9
 	fcb -1, 25, -7
-	fcb 0, -1, 8
+	fcb 0, -1, 8	; eyes
 	fcb -1, -4, 4
 	fcb -1, 4, 4
 	fcb -1, -3, -3 
@@ -15,14 +15,14 @@ Spud
 	fcb -1, -1, -1
 	fcb -1, 1, -1
 	fcb -1, -2, 0
-	fcb 0, -20, 3
+	fcb 0, -20, 3	; DICK
 	fcb -1, -2, -1
 	fcb -1, -1, 2
 	fcb -1, 5, 8
 	fcb -1, 2, 1
 	fcb -1, -1, -3
 	fcb -1, -2, -4
-	fcb 0, 10, -9
+	fcb 0, 10, -9 	; mouth
 	fcb -1, 0, 7
 	fcb -1, -3, -1
 	fcb -1, 3, -1
@@ -31,13 +31,13 @@ Spud
 	fcb -1, 3, 1
 	fcb 1 
 SpudHump ; needs work
-	fcb 1, 6, 6 
+	fcb 1, 6, 6 	; body
 	fcb -1, 0, 12
 	fcb -1, -6, 6
 	fcb -1, -25, -7
 	fcb -1, 0, -9
 	fcb -1, 25, -7
-	fcb 0, -1, 8
+	fcb 0, -1, 8 	; eyes
 	fcb -1, -4, 4
 	fcb -1, 4, 4
 	fcb -1, -3, -3
@@ -46,15 +46,15 @@ SpudHump ; needs work
 	fcb -1, -1, -1
 	fcb -1, 1, -1
 	fcb -1, -2, 0
-	fcb 0, -20, 3
+	fcb 0, -20, 3 	; diiiiick
 	fcb -1, -2, -1
 	fcb -1, -1, 2
-	fcb -1, 5, 8
+	fcb -1, 5, 16
 	fcb -1, 2, 1
-	fcb -1, -1, -3
-	fcb -1, -2, -4
-	fcb 0, 10, -9
-	fcb -1, 0, 7
+	fcb -1, -1, -8
+	fcb -1, -2, -9
+	fcb 0, 10, -9	; mouth
+	fcb 0, 0, 7
 	fcb -1, -3, -1
 	fcb -1, 3, -1
 	fcb -1, 0, -6
@@ -92,19 +92,20 @@ SpudDead ; TODO
 	fcb -1, -3, 1
 	fcb -1, 3, 1
 	fcb 1 
-SpudsLegs
-	fcb 0, 0, 10
-	fcb -1, -20, 0
-	fcb -1, 0, -10
-	fcb -1, 10, 10
-	fcb -1, 10, 0
-	fcb 0, 0, 10
-	fcb -1, -20, 0
-	fcb -1, 0, 10
-	fcb -1, 10, -10
+SpudsLegsWalk1
+	fcb 0, -20, 0
+	fcb -1, -20, 0 ; left leg
+	fcb -1, 0, -10 ; foot
+	fcb -1, 10, 0	; foot
+	fcb -1, -10, 10 ; foot
+	fcb 0, 20, 10   ; reset
+	fcb -1, -20, 0  ; right leg
+	fcb -1, 0, 10	; foot
+	fcb -1, 10, 0	; foot
+	fcb -1, -10, -10 ; foot
 	fcb 1 
-SpudsLegsHum 
-	fcb 0 , 0 , 10
+SpudsLegsWalk2
+	fcb 0 , -20 , 0
 	fcb -1 , -15 , -15
 	fcb -1 , 7 , -7
 	fcb -1 , 0 , 12
@@ -112,6 +113,27 @@ SpudsLegsHum
 	fcb -1 , -15 , 15
 	fcb -1 , 7 , 7
 	fcb -1 , 0 , -12
+	fcb 1 
+SpudsLegsWalk3  		; TODO
+	fcb 0 , -20 , 0
+	fcb -1 , -15 , -15
+	fcb -1 , 7 , -7
+	fcb -1 , 0 , 12
+	fcb 0 , 8 ,25
+	fcb -1 , -15 , 15
+	fcb -1 , 7 , 7
+	fcb -1 , 0 , -12
+	fcb 1 
+SpudsLegsHum 
+	fcb 0 , -20 , 10
+	fcb -1 , -15 , -15
+	fcb -1 , 7 , -7
+	fcb -1 , 0 , 12
+	fcb 0 , 8 ,25
+	fcb -1 , -15 , 15
+	fcb -1 , 7 , 7
+	fcb -1 , 0 , -12
+	fcb 1 
 Post 
 	fcb 0,0, -124
 	fcb -1,0, 124
@@ -121,7 +143,7 @@ Post
 	fcb -1,-99, 0
 	fcb	1
 Molly 
-	fcb 0, 26, -4
+	fcb 0, 29, -4
 	fcb -1, 0, -34
 	fcb -1, 7, 4
 	fcb -1, 0, 26
@@ -181,7 +203,7 @@ titlestring
 	fcc "SPUDSTER'S REVENGE"
 	fcb 	$80
 startstring
-	fcc " PRESS 1 TO START"
+	fcc "PRESS 1 TO START"
 	fcb 	$80
 hidden1str
 	fcc "CREATED BY"
@@ -201,6 +223,20 @@ gameoverstr
 playagainstr
 	fcc "PRESS 1 TO PLAY AGAIN"
 	fcb 	$80
+lolscore	
+	fcc	"    69"
+	fcb		$80
+lolstring
+	fcc	"LOL 69"	
+	fcb		$80
+lolgraphic
+	fcb		-1, 50,50
+	fcb		-1,	-25, 25 
+	fcb		-1, -50, -50
+	fcb		1
+abcd
+	fcc		"~!@#$%^&*()[]<>?:|abcdefghijklmnopqrstuvwxyz"
+	fcb		$80
 musa
     fdb    $fee8
     fdb    $fbe6
