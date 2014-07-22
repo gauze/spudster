@@ -104,7 +104,7 @@ draw_post
 	rts
 ;
 draw_molly
-	lda		#83
+	lda		#127
 	jsr 	set_scale 	
 	ldx		#Molly	
 	jsr 	Draw_VLp
@@ -216,11 +216,18 @@ got_hit
 	dec		spuds_left
 	lda		spud_start
 	sta		spud_xpos
-	lda		#255
+	lda		#127
 	sta		count
+; play sound
+   ldx #ploop
+   stx sfx_pointer
+   lda #$01
+   sta sfx_status
+	
 ;
 loopy
-	jsr 	Delay_3
+	jsr sfx_doframe
+	jsr Wait_Recal
 	lda		#-10
 	ldb		#96
 	std		Vec_Text_HW
@@ -229,20 +236,21 @@ loopy
 	ldb		#36	
 	jsr 	Print_Str_d 	 
 ; rotate spud	
-	lda		#127	
+	;lda		#127	
+	lda		count
 	jsr 	set_scale 	
-	jsr		Reset0Int
 	lda		spud_ypos
 	ldb		spud_xpos
 	jsr 	Moveto_d
 	ldx		#Spud
-	ldu		#SpudRot
-	lda		count
-	ldb		28
-	jsr		Rot_VL_ab
-	ldx		#SpudRot
+	;ldu		#SpudRot
+	;lda		count
+	;ldb		28
+	;jsr		Rot_VL_ab
+	;ldx		#SpudRot
 	jsr 	Draw_VLp
 
+	dec		count
 	dec		count
 	bne 	loopy
 	rts

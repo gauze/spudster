@@ -2,7 +2,7 @@
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;< Spudster's Revenge - a Play in 3 acts                            <
 ;> by Brian Mastrobuono (gauze@dropdead.org)                        >
-;< copyright 2002-2013 GNU GPL licensed, use as you wish as long as <
+;< copyright 2002-2014 GNU GPL licensed, use as you wish as long as <
 ;> your changes in source form are made public                      >
 ;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 ; best viewed with vim :set ts=4  (www.vim.org)
@@ -40,6 +40,8 @@ count		equ minbright+1
 dec_score	equ count+1
 highscore	equ	dec_score+7
 SpudRot		equ highscore+7
+sfx_pointer equ	SpudRot+1
+sfx_status  equ	sfx_pointer+1
 ;
 
 ;]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
@@ -135,6 +137,8 @@ arrow_speed
 ;             DATA SECTION
 ;********************************************************
 	include "data.i"
+	include	"sfx.asm"
+	include "sound2.asm"
 
 	end
 
