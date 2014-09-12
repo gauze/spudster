@@ -9,6 +9,7 @@
 	title "Spudster's Revenge"
 ;		BIOS ROUTINES and other crap
 	include "VECTREX.I"
+	include "vecvox.i"
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;			VARIABLES
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,7 +117,7 @@ yer_ok
 arrow_speed
 	jsr 	move_arrow
 	deca 	
-	bne arrow_speed	
+	bne 	arrow_speed	
 	jsr 	arrow_in_bounds  ; check if it's at legal pos
 
 ; checking for game over condition...
@@ -127,11 +128,10 @@ arrow_speed
 ; *** end of main ***
 ;
 ;#######################################################
-;		SUBROUTINES/FUNCTIONS BUNCH OF SHIT
+;		SUBROUTINES/FUNCTIONS 
 ;#######################################################
 
 	include	"functions.i"
-	include "vecvox.i"
 
 ;&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 ;             DATA SECTION

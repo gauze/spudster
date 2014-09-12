@@ -196,7 +196,7 @@ going_right
 	lda 	spud_xpos
 	cmpa	#53
 	beq		done_moving 		; if >= 52 don't move.
-;	inc		spud_xpos
+	inc		spud_xpos
 	inc		spud_xpos
 	bra		done_moving		;end
 ;
@@ -204,7 +204,7 @@ going_left
 	lda		spud_xpos
 	cmpa	#-127
 	beq		done_moving
-;	dec		spud_xpos
+	dec		spud_xpos
 	dec		spud_xpos
 	bra		done_moving
 done_moving
@@ -214,10 +214,8 @@ done_moving
 ; 	Lost a guy ...
 got_hit
 	dec		spuds_left
-	lda		spud_start
-	sta		spud_xpos
-	lda		#127
-	sta		count
+;	lda		#1
+;	sta		count
 ; play sound
    ldx #ploop
    stx sfx_pointer
@@ -252,7 +250,11 @@ loopy
 
 	dec		count
 	dec		count
-	bne 	loopy
+	dec		count
+;	bne 	loopy
+; reset spud position
+	lda		spud_start
+	sta		spud_xpos
 	rts
 ;
 gameoverloop
@@ -387,7 +389,7 @@ setup
 	lda 	#0
 	jsr		vox_init
 	;jsr 	Read_Btns		; no idea why this is here.
-	jsr 	Wait_Recal
+	;jsr 	Wait_Recal
 	rts		; return from function
 
 ;
