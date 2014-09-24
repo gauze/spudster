@@ -251,7 +251,7 @@ loopy
 	dec		count
 	dec		count
 	dec		count
-;	bne 	loopy
+	bne 	loopy
 ; reset spud position
 	lda		spud_start
 	sta		spud_xpos
@@ -387,7 +387,7 @@ setup
 	sta 	Vec_Joy_Mux_2_Y
 	jsr 	Joy_Digital 	; set joymode, not analog.
 	lda 	#0
-	jsr		vox_init
+;	jsr		vox_init
 	;jsr 	Read_Btns		; no idea why this is here.
 	;jsr 	Wait_Recal
 	rts		; return from function

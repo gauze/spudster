@@ -1,34 +1,36 @@
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-;< Spudster's Revenge - a Play in 3 acts                            <
-;> by Brian Mastrobuono (gauze@dropdead.org)                        >
+;< Spudster's Revenge - a Play in 3 acts							<
+;> by Brian Mastrobuono (gauze@dropdead.org)						>
 ;< copyright 2002-2014 GNU GPL licensed, use as you wish as long as <
-;> your changes in source form are made public                      >
+;> your changes in source form are made public					  >
 ;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 ; best viewed with vim :set ts=4  (www.vim.org)
 	title "Spudster's Revenge"
 ;		BIOS ROUTINES and other crap
-	include "VECTREX.I"
-	include "vecvox.i"
+	include "vectrex.i"
+;	include "vecvox.i"
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;			VARIABLES
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-current_song equ music8    ; junk.
+current_song equ music8	; junk.
 
+;	data
+;	org $C880
 ;;; player (Spud) values
 score 		equ $C880		;7 bytes as defined in BIOS routine Add_Score_?
 level 		equ score+7
 spuds_left 	equ level+1
 spud_ypos 	equ spuds_left+1  ; y
 spud_xpos	equ spud_ypos+1   ; x
-spud_coor	equ spud_ypos     ; for Obj_Hit routine load into Y-reg
+spud_coor	equ spud_ypos	 ; for Obj_Hit routine load into Y-reg
 spudstate 	equ spud_xpos+1 
 mollystate 	equ spudstate+1
 spud_start 	equ mollystate+1
 
 ; missle
 arrow_y 	equ spud_start+2  ; y
-arrow_x 	equ arrow_y+1     ; x
+arrow_x 	equ arrow_y+1	 ; x
 arrow_coor  equ arrow_y		  ; for Obj_Hit routines load into X
 ;								this routine take 2 bytes args
 
@@ -43,26 +45,27 @@ highscore	equ	dec_score+7
 SpudRot		equ highscore+7
 sfx_pointer equ	SpudRot+1
 sfx_status  equ	sfx_pointer+1
-;
+vox_addr	equ sfx_status+1
+
 
 ;]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
-;|             SETTING UP AND MAIN BLOCK                  |
+;|			 SETTING UP AND MAIN BLOCK				  |
 ;[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[
-;
-	org 	0  ; start at ...
+
 ;; *** Init block
-;
-    fcc    "g GCE k666"
-    fcb    $80
-    fdb    current_song
-    fdb    $f850
-    fcb    $30		; X
+	code
+	org	0
+	fcc	"g GCE k666"
+	fcb	$80
+	fdb	current_song
+	fdb	$f850
+	fcb	$30		; X
 	fcb	   -$70		; Y
-    fcc    "SPUDSTER'S REVENGE"
-    fcb    $80
+	fcc	"SPUDSTER'S REVENGE"
+	fcb	$80
 	fcb		$0
 ;;# end of magic init block.
-	
+	end	
 
 	jsr 	setup			; sets up what hardware to use and stuff
 restart
@@ -102,8 +105,8 @@ cantscore
 ; collision
 	ldx		arrow_coor
 	ldy		spud_coor
-	lda		#20			; MUST fix ; spud h/2
-	ldb		#10			; MUST fix ; spud w/2
+	lda		#17		; MUST fix ; spud h+arrow h/2
+	ldb		#10		; MUST fix ; spud w+arrow h/2
 	jsr		Obj_Hit
 	blo		yer_hit
 	bra		yer_ok
@@ -132,12 +135,12 @@ arrow_speed
 ;#######################################################
 
 	include	"functions.i"
+	include	"sfx.asm"
 
 ;&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-;             DATA SECTION
+;			 DATA SECTION
 ;********************************************************
 	include "data.i"
-	include	"sfx.asm"
 	include "sound2.asm"
 
 	end

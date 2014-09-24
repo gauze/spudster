@@ -1,7 +1,7 @@
 Spudster's Revenge
 ------------------
 
-"Copyright" 2001-2013 
+"Copyright" 2001-2014
 
 A vectrex adaptation of seminal Atari 2600 game "Custer's Revenge"
 
