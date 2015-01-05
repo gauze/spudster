@@ -37,16 +37,20 @@ arrow_coor  equ arrow_y		  ; for Obj_Hit routines load into X
 intlevel 	equ arrow_x+1
 brightdir 	equ intlevel+1
 coord		equ brightdir+1
-maxbright	equ coord+2
-minbright	equ	maxbright+1
-count		equ minbright+1
+count		equ coord+2
 dec_score	equ count+1
 highscore	equ	dec_score+7
 SpudRot		equ highscore+7
 sfx_pointer equ	SpudRot+1
 sfx_status  equ	sfx_pointer+1
 vox_addr	equ sfx_status+1
+currentframe equ vox_addr+2
 
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@			CONSTANTS
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+MINBRIGHT 	equ 20
+MAXBRIGHT	equ 100
 
 ;]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 ;|			 SETTING UP AND MAIN BLOCK				  |
@@ -55,7 +59,7 @@ vox_addr	equ sfx_status+1
 ;; *** Init block
 	code
 	org	0
-	fcc	"g GCE k666"
+	fcc	"g GCE 1982"
 	fcb	$80
 	fdb	current_song
 	fdb	$f850
@@ -86,15 +90,17 @@ main
 	jsr 	joystick_crap
 	jsr 	button_push
 ;
-	jsr		draw_post
-	jsr		draw_molly
 ;
+
+; SEE IF IT'S POSSIBLE TO 'SCORE'
 	lda		spud_xpos
 	cmpa	#53				; right next 2 molly
-	bne		cantscore
+	blt		cantscore
 	jsr		check_if_score
 cantscore
-	;jsr		draw_mollysface ; TODO
+	jsr		draw_post
+	jsr		draw_molly
+	jsr		draw_mollysface ; TODO
 	jsr		draw_mollyslegs 
 	jsr		draw_spud
 	jsr		draw_spudslegs 	; TODO
@@ -103,6 +109,8 @@ cantscore
 	jsr		draw_arrow
 
 ; collision
+	lda		#127
+	jsr 	set_scale 	
 	ldx		arrow_coor
 	ldy		spud_coor
 	lda		#17		; MUST fix ; spud h+arrow h/2
@@ -115,14 +123,24 @@ yer_hit
 	jsr 	arrow_create
 yer_ok
 
-; move the arrow for next loop and 
+; move the arrow for next frame (or not) 
+	lda 	currentframe	; check frame countdown
+	cmpa	#0
+	bne		arrow_done ; still counting frames if false
+	lda		level			; reseting frame counter
+	ldx		#time_frames
+	lda		a,x
+	sta		currentframe    ; ^^
 	lda		level
+	ldx		#speed_distance
+	lda		a,x
 arrow_speed
-	jsr 	move_arrow
+	jsr		move_arrow 
 	deca 	
 	bne 	arrow_speed	
 	jsr 	arrow_in_bounds  ; check if it's at legal pos
-
+arrow_done
+	dec		currentframe
 ; checking for game over condition...
 	lda		spuds_left
 	lbne	main		; jump to top

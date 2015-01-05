@@ -14,7 +14,7 @@ arrow_create
 	lda		#127
 	sta		arrow_y		; height
 	jsr 	Random		; 
-	anda	#%01111111	; mask off 1st bit == positive numbers only
+;	anda	#%01111111	; mask off 1st bit == positive numbers only
 	sta		arrow_x  	; set random x coord
 	rts
 	
@@ -55,7 +55,7 @@ check_if_score
 	lda		Vec_Button_1_1
 	beq		no_score
 	jsr		inc_score
-	lda		#1
+	lda		#10
 	sta		mollystate
 	sta		spudstate
 no_score
@@ -104,7 +104,7 @@ draw_post
 	rts
 ;
 draw_molly
-	lda		#127
+	lda		#83
 	jsr 	set_scale 	
 	ldx		#Molly	
 	jsr 	Draw_VLp
@@ -113,7 +113,7 @@ draw_molly
 draw_mollysface
 ; TODO
 ; include bow animation?
-	lda 	#83
+	lda 	#127
 	jsr		set_scale
 	ldx		#MollysFace
 	lda 	mollystate   	; if state !=1
@@ -124,16 +124,15 @@ nothumpedface
 	rts
 ;
 draw_mollyslegs
-	lda 	#83
-	jsr		set_scale
 	ldx		#MollysLegs
 	lda 	mollystate   ; if state !=1
 	beq		nothumpeds	 ; branch
 	ldx		#MollysLegsHum
+	dec		mollystate
 nothumpeds
+	lda 	#83
+	jsr		set_scale
 	jsr		Draw_VLp
-	lda		#0
-	sta		mollystate
 	rts
 ;
 
@@ -164,10 +163,9 @@ walk1
 	lda 	spudstate   ; if state !=1
 	beq		nothumping	 ; branch
 	ldx		#SpudsLegsHum
+	dec		spudstate
 nothumping
 	jsr		Draw_VLp
-	lda		#0
-	sta		spudstate
 	rts
 ;
 sound_update
@@ -175,9 +173,8 @@ sound_update
 	rts
 ;
 
-move_arrow
+move_arrow 
 	dec		arrow_x
-	dec		arrow_y
 	dec		arrow_y
 	rts
 ;
@@ -194,18 +191,20 @@ joystick_crap
 ;
 going_right
 	lda 	spud_xpos
-	cmpa	#53
-	beq		done_moving 		; if >= 52 don't move.
-	inc		spud_xpos
-	inc		spud_xpos
-	bra		done_moving		;end
+	cmpa	#55
+	bge		done_moving 		; if >= 52 don't move.
+	lda 	spud_xpos
+	adda	#3
+	sta		spud_xpos
+	bra		done_moving		
 ;
 going_left
 	lda		spud_xpos
 	cmpa	#-127
 	beq		done_moving
-	dec		spud_xpos
-	dec		spud_xpos
+	lda		spud_xpos
+	suba	#3
+	sta		spud_xpos
 	bra		done_moving
 done_moving
 	rts
@@ -214,44 +213,88 @@ done_moving
 ; 	Lost a guy ...
 got_hit
 	dec		spuds_left
-;	lda		#1
-;	sta		count
-; play sound
-   ldx #ploop
-   stx sfx_pointer
-   lda #$01
-   sta sfx_status
+	lda		#127
+	sta		count
+	inc		spudstate
+;play sound
+;   ldx #ploop
+;   stx sfx_pointer
+;   lda #$01
+;   sta sfx_status
 	
 ;
 loopy
-	jsr sfx_doframe
+;	jsr sfx_doframe
 	jsr Wait_Recal
-	lda		#-10
-	ldb		#96
-	std		Vec_Text_HW
-	ldu		#owstr	
-	lda 	#0
-	ldb		#36	
-	jsr 	Print_Str_d 	 
-; rotate spud	
-	;lda		#127	
-	lda		count
+
+
+	lda		#127	
+	jsr 	set_scale 	
+	jsr 	Intensity_5F
+	lda		#30
+	ldb		#-27
+	jsr 	Moveto_d
+	ldx		#letter_O	
+	jsr 	Draw_VLp
+	jsr		Reset0Ref
+	lda		#30
+	ldb		#40
+	jsr 	Moveto_d
+	ldx		#letter_W
+	jsr 	Draw_VLp
+
+	jsr		Reset0Ref
+;	lda		#-10
+;	ldb		#96
+;	std		Vec_Text_HW
+;	ldu		#owstr	
+;	lda 	#0
+;	ldb		#36	
+;	jsr 	Print_Str_d 	 
+; shrink spud	
+	lda		#127
 	jsr 	set_scale 	
 	lda		spud_ypos
 	ldb		spud_xpos
 	jsr 	Moveto_d
-	ldx		#Spud
-	;ldu		#SpudRot
-	;lda		count
-	;ldb		28
-	;jsr		Rot_VL_ab
-	;ldx		#SpudRot
+	lda		count
+	jsr 	set_scale 	
+	ldx		#SpudDead
+	jsr 	Draw_VLp
+;	jsr		Reset0Ref
+	lda		count
+	jsr 	set_scale 	
+;	lda		spud_ypos
+;	ldb		spud_xpos
+;	jsr 	Moveto_d
+	ldx		#SpudsLegsWalk2
 	jsr 	Draw_VLp
 
 	dec		count
 	dec		count
 	dec		count
-	bne 	loopy
+	dec		count
+	dec		count
+	dec		count
+	bmi		deadcont
+	bne 	loopy  ; loop
+deadcont
+	lda		#20		; reload counter
+	sta		count
+deadStar
+	jsr 	Wait_Recal
+	lda		#127
+	jsr 	set_scale 	
+	lda		spud_ypos
+	ldb		spud_xpos
+	jsr 	Moveto_d
+	jsr		Intensity_3F
+	lda		#127
+	jsr 	set_scale 	
+	ldx 	#SpudDeadFinal
+	jsr		Draw_VLp
+	dec 	count
+	bne		deadStar
 ; reset spud position
 	lda		spud_start
 	sta		spud_xpos
@@ -331,14 +374,14 @@ no_btn_psh
 down	
 	dec		intlevel		; load the 'level' of bright
 	lda		intlevel		
-	cmpa	minbright			;compare it to our threshhold
+	cmpa	#MINBRIGHT		;compare it to our threshhold
 	beq		changedir2up		; if yes: 
 	bra		finish_pulse
 ;
 up
 	inc		intlevel
 	lda		intlevel
-	cmpa	maxbright
+	cmpa	#MAXBRIGHT
 	beq		changedir2down
 	bra		finish_pulse
 ;
@@ -356,7 +399,6 @@ finish_pulse
 	jsr		Intensity_a		; set intensity here
 ; end intensity routine
 	ldu		#startstring
-;	ldu		#abcd			; REMOVE
 	lda		#-50
 	ldb		#-110
 	jsr		Print_Str_d
@@ -376,10 +418,7 @@ setup
 	sta 	Vec_Joy_Mux_1_X 	
 	ldx 	#highscore
 	jsr		Clear_Score ; Bios routine yay
-	lda		#64
-	sta		maxbright 			; max intensity
 	lda		#10
-	sta		minbright			; min intensity
 	sta		intlevel			; intensity level
 	lda 	#0 				; disable for Joy Mux's
 	sta 	Vec_Joy_Mux_1_Y
@@ -397,7 +436,7 @@ start
 	lda 	#3
 	sta 	spuds_left
 	ldx 	#score
-	jsr		Clear_Score ; Bios routine yay
+	jsr		Clear_Score
 	lda		#0
 	sta 	spudstate
 	sta 	mollystate
@@ -405,10 +444,13 @@ start
 	std		dec_score
 	lda 	#1	
 	sta 	level
+    ldx     #time_frames ; setting initial frame counter
+    lda     a,x
+    sta     currentframe    ; ^^
 	lda		#-127
 	sta		spud_start
 	sta 	spud_xpos
-	lda		#50
+	lda		#20
 	sta		spud_ypos
 	rts
 

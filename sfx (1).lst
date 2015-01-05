@@ -1,8 +1,0 @@
-AS09 Assembler for M6809 [1.42].                                     Page    1
--------------------------------- sfx (1).asm ---------------------------------
-
-568 lines read, no errors in pass 1.
-No errors in pass 2.
-Wrote binary from address $0000 through $0351.
-Total size 850 bytes.
-

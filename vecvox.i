@@ -40,12 +40,6 @@ VOX_TERM        equ     $ff     ; speech string terminator
 ;
 
 
-        bss
-
-vox_addr        ds      2
-
-
-
 ;
 ; Subroutines
 ;

@@ -1,7 +1,1449 @@
 AS09 Assembler for M6809 [1.42].                                     Page    1
 ---------------------------------- spud.asm ----------------------------------
 
-52:	org 	0  ; start at ...
-"spud.asm",52 : Invalid origin statement.
-1577 lines read, 1 error in pass 1.
+1369 lines read, no errors in pass 1.
+                        
+                        ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                        ;< Spudster's Revenge - a Play in 3 acts							<
+                        ;> by Brian Mastrobuono (gauze@dropdead.org)						>
+                        ;< copyright 2002-2014 GNU GPL licensed, use as you wi
+                        ;> your changes in source form are made public					  >
+                        ;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                        ; best viewed with vim :set ts=4  (www.vim.org)
+                        	title "Spudster's Revenge"
+                        ;		BIOS ROUTINES and other crap
+                        	include "vectrex.i"
+                        ; this file is part of vectrex frogger, written by Chr
+                        ; in March-April 1998
+                        ; all stuff contained here is public domain (?)
+                        ;
+                        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        ; this file contains includes for vectrex BIOS functio
+                        ; it was written by Bruce Tomlin, slighte changed by C
+                        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        
+c800 =                  Vec_Snd_Shadow  equ     $C800   ;Shadow of sound chip 
+c80f =                  Vec_Btn_State   equ     $C80F   ;Current state of all 
+c810 =                  Vec_Prev_Btns   equ     $C810   ;Previous state of all
+c811 =                  Vec_Buttons     equ     $C811   ;Current toggle state 
+c812 =                  Vec_Button_1_1  equ     $C812   ;Current toggle state 
+c813 =                  Vec_Button_1_2  equ     $C813   ;Current toggle state 
+c814 =                  Vec_Button_1_3  equ     $C814   ;Current toggle state 
+c815 =                  Vec_Button_1_4  equ     $C815   ;Current toggle state 
+c816 =                  Vec_Button_2_1  equ     $C816   ;Current toggle state 
+c817 =                  Vec_Button_2_2  equ     $C817   ;Current toggle state 
+c818 =                  Vec_Button_2_3  equ     $C818   ;Current toggle state 
+c819 =                  Vec_Button_2_4  equ     $C819   ;Current toggle state 
+c81a =                  Vec_Joy_Resltn  equ     $C81A   ;Joystick A/D resoluti
+c81b =                  Vec_Joy_1_X     equ     $C81B   ;Joystick 1 left/right
+c81c =                  Vec_Joy_1_Y     equ     $C81C   ;Joystick 1 up/down
+c81d =                  Vec_Joy_2_X     equ     $C81D   ;Joystick 2 left/right
+c81e =                  Vec_Joy_2_Y     equ     $C81E   ;Joystick 2 up/down
+c81f =                  Vec_Joy_Mux     equ     $C81F   ;Joystick enable/mux f
+c81f =                  Vec_Joy_Mux_1_X equ     $C81F   ;Joystick 1 X enable/m
+c820 =                  Vec_Joy_Mux_1_Y equ     $C820   ;Joystick 1 Y enable/m
+c821 =                  Vec_Joy_Mux_2_X equ     $C821   ;Joystick 2 X enable/m
+c822 =                  Vec_Joy_Mux_2_Y equ     $C822   ;Joystick 2 Y enable/m
+c823 =                  Vec_Misc_Count  equ     $C823   ;Misc counter/flag byt
+c824 =                  Vec_0Ref_Enable equ     $C824   ;Check0Ref enable flag
+c825 =                  Vec_Loop_Count  equ     $C825   ;Loop counter word (in
+c827 =                  Vec_Brightness  equ     $C827   ;Default brightness
+c828 =                  Vec_Dot_Dwell   equ     $C828   ;Dot dwell time?
+c829 =                  Vec_Pattern     equ     $C829   ;Dot pattern (bits)
+c82a =                  Vec_Text_HW     equ     $C82A   ;Default text height a
+c82a =                  Vec_Text_Height equ     $C82A   ;Default text height
+c82b =                  Vec_Text_Width  equ     $C82B   ;Default text width
+c82c =                  Vec_Str_Ptr     equ     $C82C   ;Temporary string poin
+c82e =                  Vec_Counters    equ     $C82E   ;Six bytes of counters
+c82e =                  Vec_Counter_1   equ     $C82E   ;First  counter byte
+c82f =                  Vec_Counter_2   equ     $C82F   ;Second counter byte
+c830 =                  Vec_Counter_3   equ     $C830   ;Third  counter byte
+c831 =                  Vec_Counter_4   equ     $C831   ;Fourth counter byte
+c832 =                  Vec_Counter_5   equ     $C832   ;Fifth  counter byte
+c833 =                  Vec_Counter_6   equ     $C833   ;Sixth  counter byte
+c834 =                  Vec_RiseRun_Tmp equ     $C834   ;Temp storage word for
+c836 =                  Vec_Angle       equ     $C836   ;Angle for rise/run an
+AS09 Assembler for M6809 [1.42].                                     Page    2
+----------------------------- Spudster's Revenge -----------------------------
+
+c837 =                  Vec_Run_Index   equ     $C837   ;Index pair for run
+                        ;*                       $C839   ;Pointer to copyright
+c839 =                  Vec_Rise_Index  equ     $C839   ;Index pair for rise
+                        ;*                       $C83B   ;High score cold-star
+c83b =                  Vec_RiseRun_Len equ     $C83B   ;length for rise/run
+                        ;*                       $C83C   ;temp byte
+c83d =                  Vec_Rfrsh       equ     $C83D   ;Refresh time (divided
+c83d =                  Vec_Rfrsh_lo    equ     $C83D   ;Refresh time low byte
+c83e =                  Vec_Rfrsh_hi    equ     $C83E   ;Refresh time high byt
+c83f =                  Vec_Music_Work  equ     $C83F   ;Music work buffer (14
+c842 =                  Vec_Music_Wk_A  equ     $C842   ;        register 10
+                        ;*                       $C843   ;        register 9
+                        ;*                       $C844   ;        register 8
+c845 =                  Vec_Music_Wk_7  equ     $C845   ;        register 7
+c846 =                  Vec_Music_Wk_6  equ     $C846   ;        register 6
+c847 =                  Vec_Music_Wk_5  equ     $C847   ;        register 5
+                        ;*                       $C848   ;        register 4
+                        ;*                       $C849   ;        register 3
+                        ;*                       $C84A   ;        register 2
+c84b =                  Vec_Music_Wk_1  equ     $C84B   ;        register 1
+                        ;*                       $C84C   ;        register 0
+c84d =                  Vec_Freq_Table  equ     $C84D   ;Pointer to note-to-fr
+c84f =                  Vec_Max_Players equ     $C84F   ;Maximum number of pla
+c850 =                  Vec_Max_Games   equ     $C850   ;Maximum number of gam
+c84f =                  Vec_ADSR_Table  equ     $C84F   ;Storage for first mus
+c851 =                  Vec_Twang_Table equ     $C851   ;Storage for second mu
+c853 =                  Vec_Music_Ptr   equ     $C853   ;Music data pointer
+c853 =                  Vec_Expl_ChanA  equ     $C853   ;Used by Explosion_Snd
+c854 =                  Vec_Expl_Chans  equ     $C854   ;Used by Explosion_Snd
+c855 =                  Vec_Music_Chan  equ     $C855   ;Current sound channel
+c856 =                  Vec_Music_Flag  equ     $C856   ;Music active flag ($0
+c857 =                  Vec_Duration    equ     $C857   ;Duration counter for 
+c858 =                  Vec_Music_Twang equ     $C858   ;3 word 'twang' table 
+c858 =                  Vec_Expl_1      equ     $C858   ;Four bytes copied fro
+c859 =                  Vec_Expl_2      equ     $C859   ;
+c85a =                  Vec_Expl_3      equ     $C85A   ;
+c85b =                  Vec_Expl_4      equ     $C85B   ;
+c85c =                  Vec_Expl_Chan   equ     $C85C   ;Used by Explosion_Snd
+c85d =                  Vec_Expl_ChanB  equ     $C85D   ;Used by Explosion_Snd
+c85e =                  Vec_ADSR_Timers equ     $C85E   ;ADSR timers for each 
+c861 =                  Vec_Music_Freq  equ     $C861   ;Storage for base freq
+                        ;*                       $C85E   ;Scratch 'score' stor
+c867 =                  Vec_Expl_Flag   equ     $C867   ;Explosion_Snd initial
+                        ;*               $C868...$C876   ;Unused?
+c877 =                  Vec_Expl_Timer  equ     $C877   ;Used by Explosion_Snd
+                        ;*                       $C878   ;Unused?
+c879 =                  Vec_Num_Players equ     $C879   ;Number of players sel
+c87a =                  Vec_Num_Game    equ     $C87A   ;Game number selected 
+c87b =                  Vec_Seed_Ptr    equ     $C87B   ;Pointer to 3-byte ran
+c87d =                  Vec_Random_Seed equ     $C87D   ;Default 3-byte random
+                                                        ;
+                        ;*    $C880 - $CBEA is user RAM  ;
+                                                        ;
+cbea =                  Vec_Default_Stk equ     $CBEA   ;Default top-of-stack
+cbeb =                  Vec_High_Score  equ     $CBEB   ;High score storage (7
+cbf2 =                  Vec_SWI3_Vector equ     $CBF2   ;SWI2/SWI3 interrupt v
+cbf2 =                  Vec_SWI2_Vector equ     $CBF2   ;SWI2/SWI3 interrupt v
+cbf5 =                  Vec_FIRQ_Vector equ     $CBF5   ;FIRQ interrupt vector
+cbf8 =                  Vec_IRQ_Vector  equ     $CBF8   ;IRQ interrupt vector 
+cbfb =                  Vec_SWI_Vector  equ     $CBFB   ;SWI/NMI interrupt vec
+cbfb =                  Vec_NMI_Vector  equ     $CBFB   ;SWI/NMI interrupt vec
+cbfe =                  Vec_Cold_Flag   equ     $CBFE   ;Cold start flag (warm
+AS09 Assembler for M6809 [1.42].                                     Page    3
+----------------------------- Spudster's Revenge -----------------------------
+
+                                                        ;
+d000 =                  VIA_port_b      equ     $D000   ;VIA port B data I/O r
+                        ;*       0 sample/hold (0=enable  mux 1=disable mux)
+                        ;*       1 mux sel 0
+                        ;*       2 mux sel 1
+                        ;*       3 sound BC1
+                        ;*       4 sound BDIR
+                        ;*       5 comparator input
+                        ;*       6 external device (slot pin 35) initialized t
+                        ;*       7 /RAMP
+d001 =                  VIA_port_a      equ     $D001   ;VIA port A data I/O r
+d002 =                  VIA_DDR_b       equ     $D002   ;VIA port B data direc
+d003 =                  VIA_DDR_a       equ     $D003   ;VIA port A data direc
+d004 =                  VIA_t1_cnt_lo   equ     $D004   ;VIA timer 1 count reg
+d005 =                  VIA_t1_cnt_hi   equ     $D005   ;VIA timer 1 count reg
+d006 =                  VIA_t1_lch_lo   equ     $D006   ;VIA timer 1 latch reg
+d007 =                  VIA_t1_lch_hi   equ     $D007   ;VIA timer 1 latch reg
+d008 =                  VIA_t2_lo       equ     $D008   ;VIA timer 2 count/lat
+d009 =                  VIA_t2_hi       equ     $D009   ;VIA timer 2 count/lat
+d00a =                  VIA_shift_reg   equ     $D00A   ;VIA shift register
+d00b =                  VIA_aux_cntl    equ     $D00B   ;VIA auxiliary control
+                        ;*       0 PA latch enable
+                        ;*       1 PB latch enable
+                        ;*       2 \                     110=output to CB2 und
+                        ;*       3  > shift register control     (110 is the o
+                        ;*       4 /
+                        ;*       5 0=t2 one shot                 1=t2 free run
+                        ;*       6 0=t1 one shot                 1=t1 free run
+                        ;*       7 0=t1 disable PB7 output       1=t1 enable P
+d00c =                  VIA_cntl        equ     $D00C   ;VIA control register
+                        ;*       0 CA1 control     CA1 -> SW7    0=IRQ on low 
+                        ;*       1 \
+                        ;*       2  > CA2 control  CA2 -> /ZERO  110=low 111=h
+                        ;*       3 /
+                        ;*       4 CB1 control     CB1 -> NC     0=IRQ on low 
+                        ;*       5 \
+                        ;*       6  > CB2 control  CB2 -> /BLANK 110=low 111=h
+                        ;*       7 /
+d00d =                  VIA_int_flags   equ     $D00D   ;VIA interrupt flags r
+                        ;*               bit                             clear
+                        ;*       0 CA2 interrupt flag            reading or wr
+                        ;*       1 CA1 interrupt flag            reading or wr
+                        ;*       2 shift register interrupt flag reading or wr
+                        ;*       3 CB2 interrupt flag            reading or wr
+                        ;*       4 CB1 interrupt flag            reading or wr
+                        ;*       5 timer 2 interrupt flag        read t2 low o
+                        ;*       6 timer 1 interrupt flag        read t1 count
+                        ;*       7 IRQ status flag               write logic 0
+d00e =                  VIA_int_enable  equ     $D00E   ;VIA interrupt enable 
+                        ;*       0 CA2 interrupt enable
+                        ;*       1 CA1 interrupt enable
+                        ;*       2 shift register interrupt enable
+                        ;*       3 CB2 interrupt enable
+                        ;*       4 CB1 interrupt enable
+                        ;*       5 timer 2 interrupt enable
+                        ;*       6 timer 1 interrupt enable
+                        ;*       7 IER set/clear control
+d00f =                  VIA_port_a_nohs equ     $D00F   ;VIA port A data I/O r
+                        
+f000 =                  Cold_Start      equ     $F000   ;
+f06c =                  Warm_Start      equ     $F06C   ;
+f14c =                  Init_VIA        equ     $F14C   ;
+AS09 Assembler for M6809 [1.42].                                     Page    4
+----------------------------- Spudster's Revenge -----------------------------
+
+f164 =                  Init_OS_RAM     equ     $F164   ;
+f18b =                  Init_OS         equ     $F18B   ;
+f192 =                  Wait_Recal      equ     $F192   ;
+f1a2 =                  Set_Refresh     equ     $F1A2   ;
+f1aa =                  DP_to_D0        equ     $F1AA   ;
+f1af =                  DP_to_C8        equ     $F1AF   ;
+f1b4 =                  Read_Btns_Mask  equ     $F1B4   ;
+f1ba =                  Read_Btns       equ     $F1BA   ;
+f1f5 =                  Joy_Analog      equ     $F1F5   ;
+f1f8 =                  Joy_Digital     equ     $F1F8   ;
+f256 =                  Sound_Byte      equ     $F256   ;
+f259 =                  Sound_Byte_x    equ     $F259   ;
+f25b =                  Sound_Byte_raw  equ     $F25B   ;
+f272 =                  Clear_Sound     equ     $F272   ;
+f27d =                  Sound_Bytes     equ     $F27D   ;
+f284 =                  Sound_Bytes_x   equ     $F284   ;
+f289 =                  Do_Sound        equ     $F289   ;
+f28c =                  Do_Sound_x      equ     $F28C   ;
+f29d =                  Intensity_1F    equ     $F29D   ;
+f2a1 =                  Intensity_3F    equ     $F2A1   ;
+f2a5 =                  Intensity_5F    equ     $F2A5   ;
+f2a9 =                  Intensity_7F    equ     $F2A9   ;
+f2ab =                  Intensity_a     equ     $F2AB   ;
+f2be =                  Dot_ix_b        equ     $F2BE   ;
+f2c1 =                  Dot_ix          equ     $F2C1   ;
+f2c3 =                  Dot_d           equ     $F2C3   ;
+f2c5 =                  Dot_here        equ     $F2C5   ;
+f2d5 =                  Dot_List        equ     $F2D5   ;
+f2de =                  Dot_List_Reset  equ     $F2DE   ;
+f2e6 =                  Recalibrate     equ     $F2E6   ;
+f2f2 =                  Moveto_x_7F     equ     $F2F2   ;
+f2fc =                  Moveto_d_7F     equ     $F2FC   ;
+f308 =                  Moveto_ix_FF    equ     $F308   ;
+f30c =                  Moveto_ix_7F    equ     $F30C   ;
+f30e =                  Moveto_ix_a     equ     $F30E   ;
+f310 =                  Moveto_ix       equ     $F310   ;
+f312 =                  Moveto_d        equ     $F312   ;
+f34a =                  Reset0Ref_D0    equ     $F34A   ;
+f34f =                  Check0Ref       equ     $F34F   ;
+f354 =                  Reset0Ref       equ     $F354   ;
+f35b =                  Reset_Pen       equ     $F35B   ;
+f36b =                  Reset0Int       equ     $F36B   ;
+f373 =                  Print_Str_hwyx  equ     $F373   ;
+f378 =                  Print_Str_yx    equ     $F378   ;
+f37a =                  Print_Str_d     equ     $F37A   ;
+f385 =                  Print_List_hw   equ     $F385   ;
+f38a =                  Print_List      equ     $F38A   ;
+f38c =                  Print_List_chk  equ     $F38C   ;
+f391 =                  Print_Ships_x   equ     $F391   ;
+f393 =                  Print_Ships     equ     $F393   ;
+f3ad =                  Mov_Draw_VLc_a  equ     $F3AD   ;count y x y x ...
+f3b1 =                  Mov_Draw_VL_b   equ     $F3B1   ;y x y x ...
+f3b5 =                  Mov_Draw_VLcs   equ     $F3B5   ;count scale y x y x .
+f3b7 =                  Mov_Draw_VL_ab  equ     $F3B7   ;y x y x ...
+f3b9 =                  Mov_Draw_VL_a   equ     $F3B9   ;y x y x ...
+f3bc =                  Mov_Draw_VL     equ     $F3BC   ;y x y x ...
+f3be =                  Mov_Draw_VL_d   equ     $F3BE   ;y x y x ...
+f3ce =                  Draw_VLc        equ     $F3CE   ;count y x y x ...
+f3d2 =                  Draw_VL_b       equ     $F3D2   ;y x y x ...
+f3d6 =                  Draw_VLcs       equ     $F3D6   ;count scale y x y x .
+f3d8 =                  Draw_VL_ab      equ     $F3D8   ;y x y x ...
+f3da =                  Draw_VL_a       equ     $F3DA   ;y x y x ...
+AS09 Assembler for M6809 [1.42].                                     Page    5
+----------------------------- Spudster's Revenge -----------------------------
+
+f3dd =                  Draw_VL         equ     $F3DD   ;y x y x ...
+f3df =                  Draw_Line_d     equ     $F3DF   ;y x y x ...
+f404 =                  Draw_VLp_FF     equ     $F404   ;pattern y x pattern y
+f408 =                  Draw_VLp_7F     equ     $F408   ;pattern y x pattern y
+f40c =                  Draw_VLp_scale  equ     $F40C   ;scale pattern y x pat
+f40e =                  Draw_VLp_b      equ     $F40E   ;pattern y x pattern y
+f410 =                  Draw_VLp        equ     $F410   ;pattern y x pattern y
+f434 =                  Draw_Pat_VL_a   equ     $F434   ;y x y x ...
+f437 =                  Draw_Pat_VL     equ     $F437   ;y x y x ...
+f439 =                  Draw_Pat_VL_d   equ     $F439   ;y x y x ...
+f46e =                  Draw_VL_mode    equ     $F46E   ;mode y x mode y x ...
+f495 =                  Print_Str       equ     $F495   ;
+f511 =                  Random_3        equ     $F511   ;
+f517 =                  Random          equ     $F517   ;
+f533 =                  Init_Music_Buf  equ     $F533   ;
+f53f =                  Clear_x_b       equ     $F53F   ;
+f542 =                  Clear_C8_RAM    equ     $F542   ;never used by GCE car
+f545 =                  Clear_x_256     equ     $F545   ;
+f548 =                  Clear_x_d       equ     $F548   ;
+f550 =                  Clear_x_b_80    equ     $F550   ;
+f552 =                  Clear_x_b_a     equ     $F552   ;
+f55a =                  Dec_3_Counters  equ     $F55A   ;
+f55e =                  Dec_6_Counters  equ     $F55E   ;
+f563 =                  Dec_Counters    equ     $F563   ;
+f56d =                  Delay_3         equ     $F56D   ;30 cycles
+f571 =                  Delay_2         equ     $F571   ;25 cycles
+f575 =                  Delay_1         equ     $F575   ;20 cycles
+f579 =                  Delay_0         equ     $F579   ;12 cycles
+f57a =                  Delay_b         equ     $F57A   ;5*B + 10 cycles
+f57d =                  Delay_RTS       equ     $F57D   ;5 cycles
+f57e =                  Bitmask_a       equ     $F57E   ;
+f584 =                  Abs_a_b         equ     $F584   ;
+f58b =                  Abs_b           equ     $F58B   ;
+f593 =                  Rise_Run_Angle  equ     $F593   ;
+f5d9 =                  Get_Rise_Idx    equ     $F5D9   ;
+f5db =                  Get_Run_Idx     equ     $F5DB   ;
+f5ef =                  Get_Rise_Run    equ     $F5EF   ;
+f5ff =                  Rise_Run_X      equ     $F5FF   ;
+f601 =                  Rise_Run_Y      equ     $F601   ;
+f603 =                  Rise_Run_Len    equ     $F603   ;
+f610 =                  Rot_VL_ab       equ     $F610   ;
+f616 =                  Rot_VL          equ     $F616   ;
+f61f =                  Rot_VL_Mode_a   equ     $F61F   ;
+f62b =                  Rot_VL_Mode     equ     $F62B   ;
+f637 =                  Rot_VL_dft      equ     $F637   ;
+f65b =                  Xform_Run_a     equ     $F65B   ;
+f65d =                  Xform_Run       equ     $F65D   ;
+f661 =                  Xform_Rise_a    equ     $F661   ;
+f663 =                  Xform_Rise      equ     $F663   ;
+f67f =                  Move_Mem_a_1    equ     $F67F   ;
+f683 =                  Move_Mem_a      equ     $F683   ;
+f687 =                  Init_Music_chk  equ     $F687   ;
+f68d =                  Init_Music      equ     $F68D   ;
+f692 =                  Init_Music_x    equ     $F692   ;
+f7a9 =                  Select_Game     equ     $F7A9   ;
+f84f =                  Clear_Score     equ     $F84F   ;
+f85e =                  Add_Score_a     equ     $F85E   ;
+f87c =                  Add_Score_d     equ     $F87C   ;
+f8b7 =                  Strip_Zeros     equ     $F8B7   ;
+f8c7 =                  Compare_Score   equ     $F8C7   ;
+f8d8 =                  New_High_Score  equ     $F8D8   ;
+f8e5 =                  Obj_Will_Hit_u  equ     $F8E5   ;
+AS09 Assembler for M6809 [1.42].                                     Page    6
+----------------------------- Spudster's Revenge -----------------------------
+
+f8f3 =                  Obj_Will_Hit    equ     $F8F3   ;
+f8ff =                  Obj_Hit         equ     $F8FF   ;
+f92e =                  Explosion_Snd   equ     $F92E   ;
+ff9f =                  Draw_Grid_VL    equ     $FF9F   ;
+                                                        ;
+fd0d =                  music1  equ $FD0D               ;
+fd1d =                  music2  equ $FD1D               ;
+fd81 =                  music3  equ $FD81               ;
+fdd3 =                  music4  equ $FDD3               ;
+fe38 =                  music5  equ $FE38               ;
+fe76 =                  music6  equ $FE76               ;
+fec6 =                  music7  equ $FEC6               ;
+fef8 =                  music8  equ $FEF8               ;
+ff26 =                  music9  equ $FF26               ;
+ff44 =                  musica  equ $FF44               ;
+ff62 =                  musicb  equ $FF62               ;
+ff7a =                  musicc  equ $FF7A               ;
+ff8f =                  musicd  equ $FF8F               ;
+                        
+                        ;endif
+                        
+                        ;	include "vecvox.i"
+                        ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        ;			VARIABLES
+                        ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+fef8 =                  current_song equ music8	; junk.
+                        
+                        ;	data
+                        ;	org $C880
+                        ;;; player (Spud) values
+c880 =                  score 		equ $C880		;7 bytes as defined in BIOS routine
+c887 =                  level 		equ score+7
+c888 =                  spuds_left 	equ level+1
+c889 =                  spud_ypos 	equ spuds_left+1  ; y
+c88a =                  spud_xpos	equ spud_ypos+1   ; x
+c889 =                  spud_coor	equ spud_ypos	 ; for Obj_Hit routine load in
+c88b =                  spudstate 	equ spud_xpos+1 
+c88c =                  mollystate 	equ spudstate+1
+c88d =                  spud_start 	equ mollystate+1
+                        
+                        ; missle
+c88f =                  arrow_y 	equ spud_start+2  ; y
+c890 =                  arrow_x 	equ arrow_y+1	 ; x
+c88f =                  arrow_coor  equ arrow_y		  ; for Obj_Hit routines load
+                        ;								this routine take 2 bytes args
+                        
+c891 =                  intlevel 	equ arrow_x+1
+c892 =                  brightdir 	equ intlevel+1
+c893 =                  coord		equ brightdir+1
+c895 =                  count		equ coord+2
+c896 =                  dec_score	equ count+1
+c89d =                  highscore	equ	dec_score+7
+c8a4 =                  SpudRot		equ highscore+7
+c8a5 =                  sfx_pointer equ	SpudRot+1
+c8a6 =                  sfx_status  equ	sfx_pointer+1
+c8a7 =                  vox_addr	equ sfx_status+1
+c8a9 =                  currentframe equ vox_addr+2
+                        
+                        ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                        ;@			CONSTANTS
+                        ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+0014 =                  MINBRIGHT 	equ 20
+AS09 Assembler for M6809 [1.42].                                     Page    7
+----------------------------- Spudster's Revenge -----------------------------
+
+0064 =                  MAXBRIGHT	equ 100
+                        
+                        ;]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+                        ;|			 SETTING UP AND MAIN BLOCK				  |
+                        ;[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[
+                        
+                        ;; *** Init block
+                        	code
+0000 =                  	org	0
+0000 : 67204743452031.. 	fcc	"g GCE 1982"
+000a : 80               	fcb	$80
+000b : fef8             	fdb	current_song
+000d : f850             	fdb	$f850
+000f : 30               	fcb	$30		; X
+0010 : 90               	fcb	   -$70		; Y
+0011 : 53505544535445.. 	fcc	"SPUDSTER'S REVENGE"
+0023 : 80               	fcb	$80
+0024 : 00               	fcb		$0
+                        ;;# end of magic init block.
+                        	end	
+                        
+0025 : bd038d           	jsr 	setup			; sets up what hardware to use and stuff
+0028 :                  restart
+0028 : bd03ae           	jsr		start
+002b : bd0315           	jsr 	titlescreen		; wait for button press here before
+002e : bd00b9           	jsr		arrow_create	; create an arrow
+                        ;
+0031 :                  main
+0031 : bdf192           	jsr 	Wait_Recal
+0034 : bdf2a1           	jsr 	Intensity_3F
+0037 : 867f             	lda		#127
+0039 : bd0414           	jsr 	set_scale 	
+003c : 8600             	lda 	#0
+003e : bd03fe           	jsr		guys_left
+0041 : bd00c5           	jsr		show_score
+                        ;
+                        ;	jsr		sound_update
+0044 : bd01cf           	jsr 	joystick_crap
+0047 : bd01ce           	jsr 	button_push
+                        ;
+                        ;
+                        
+                        ; SEE IF IT'S POSSIBLE TO 'SCORE'
+004a : b6c88a           	lda		spud_xpos
+004d : 8135             	cmpa	#53				; right next 2 molly
+004f : 2d03             	blt		cantscore
+0051 : bd00fc           	jsr		check_if_score
+0054 :                  cantscore
+0054 : bd0139           	jsr		draw_post
+0057 : bd014e           	jsr		draw_molly
+005a : bd015a           	jsr		draw_mollysface ; TODO
+005d : bd016e           	jsr		draw_mollyslegs 
+0060 : bd0185           	jsr		draw_spud
+0063 : bd01a5           	jsr		draw_spudslegs 	; TODO
+                        
+0066 : bdf36b           	jsr		Reset0Int
+0069 : bd0113           	jsr		draw_arrow
+                        
+                        ; collision
+006c : 867f             	lda		#127
+006e : bd0414           	jsr 	set_scale 	
+0071 : bec88f           	ldx		arrow_coor
+AS09 Assembler for M6809 [1.42].                                     Page    8
+----------------------------- Spudster's Revenge -----------------------------
+
+0074 : 10bec889         	ldy		spud_coor
+0078 : 8611             	lda		#17		; MUST fix ; spud h+arrow h/2
+007a : c60a             	ldb		#10		; MUST fix ; spud w+arrow h/2
+007c : bdf8ff           	jsr		Obj_Hit
+007f : 2502             	blo		yer_hit
+0081 : 2006             	bra		yer_ok
+0083 :                  yer_hit
+0083 : bd01fc           	jsr		got_hit
+0086 : bd00b9           	jsr 	arrow_create
+0089 :                  yer_ok
+                        
+                        ; move the arrow for next frame (or not) 
+0089 : b6c8a9           	lda 	currentframe	; check frame countdown
+008c : 8100             	cmpa	#0
+008e : 261c             	bne		arrow_done ; still counting frames if false
+0090 : b6c887           	lda		level			; reseting frame counter
+0093 : 8e07a5           	ldx		#time_frames
+0096 : a686             	lda		a,x
+0098 : b7c8a9           	sta		currentframe    ; ^^
+009b : b6c887           	lda		level
+009e : 8e079b           	ldx		#speed_distance
+00a1 : a686             	lda		a,x
+00a3 :                  arrow_speed
+00a3 : bd01c7           	jsr		move_arrow 
+00a6 : 4a               	deca 	
+00a7 : 26fa             	bne 	arrow_speed	
+00a9 : bd0128           	jsr 	arrow_in_bounds  ; check if it's at legal pos
+00ac :                  arrow_done
+00ac : 7ac8a9           	dec		currentframe
+                        ; checking for game over condition...
+00af : b6c888           	lda		spuds_left
+00b2 : 1026ff7b         	lbne	main		; jump to top
+00b6 : 7e02ac           	jmp		gameoverloop
+                        
+                        ; *** end of main ***
+                        ;
+                        ;#####################################################
+                        ;		SUBROUTINES/FUNCTIONS 
+                        ;#####################################################
+                        
+                        	include	"functions.i"
+                        ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                        ;< Spudster's Revenge - a Play in 3 acts              
+                        ;> by Brian Mastrobuono (gauze@dropdead.org)          
+                        ;< copyright 2002-2013 GNU GPL licensed, use as you wi
+                        ;> your changes in source form are made public        
+                        ;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                        ; best viewed with vim :set ts=4  (www.vim.org)
+                        ;
+                        ;#####################################################
+                        ;		SUBROUTINES/FUNCTIONS
+                        ;#####################################################
+                        
+00b9 :                  arrow_create
+00b9 : 867f             	lda		#127
+00bb : b7c88f           	sta		arrow_y		; height
+00be : bdf517           	jsr 	Random		; 
+                        ;	anda	#%01111111	; mask off 1st bit == positive numbe
+00c1 : b7c890           	sta		arrow_x  	; set random x coord
+00c4 : 39               	rts
+                        	
+                        ; display score, once per frame ...
+AS09 Assembler for M6809 [1.42].                                     Page    9
+----------------------------- Spudster's Revenge -----------------------------
+
+00c5 :                  show_score
+00c5 : cec880           	ldu		#score
+00c8 : 86f6             	lda		#-10
+00ca : c69c             	ldb		#-100
+00cc : bdf37a           	jsr		Print_Str_d		
+00cf : 39               	rts
+                        ;
+00d0 :                  show_highscore
+00d0 : cec89d           	ldu		#highscore
+00d3 : 8664             	lda		#100
+00d5 : c69c             	ldb		#-100
+00d7 : bdf37a           	jsr		Print_Str_d		
+00da : 39               	rts
+                        ;
+00db :                  inc_score
+00db : fcc896           	ldd		dec_score ; decimal score stored as a reference
+00de : c30001           	addd	#1
+00e1 : fdc896           	std		dec_score
+00e4 : 8601             	lda		#1
+00e6 : 8ec880           	ldx 	#score
+00e9 : bdf85e           	jsr		Add_Score_a		
+                        
+00ec : b6c887           	lda		level		; level
+00ef : c632             	ldb		#50			; 50
+00f1 : 3d               	mul					; times 
+00f2 : 10b3c896         	cmpd    dec_score	; if register > memory branch
+00f6 : 2e03             	bgt		nope
+00f8 : 7cc887           	inc 	level	
+00fb :                  nope	
+00fb : 39               	rts
+                        ;
+00fc :                  check_if_score
+00fc : bdf1ba           	jsr		Read_Btns
+00ff : b6c812           	lda		Vec_Button_1_1
+0102 : 270a             	beq		no_score
+0104 : 8dd5             	jsr		inc_score
+0106 : 860a             	lda		#10
+0108 : b7c88c           	sta		mollystate
+010b : b7c88b           	sta		spudstate
+010e :                  no_score
+010e : 39               	rts
+                        ;
+010f :                  level_up
+010f : 7cc887           	inc		level
+                        ; add more stuff to increase game speed?
+0112 : 39               	rts
+                        ;
+0113 :                  draw_arrow
+0113 : 867f             	lda		#127
+0115 : bd0414           	jsr		set_scale	
+0118 : b6c88f           	lda		arrow_y
+011b : f6c890           	ldb		arrow_x
+011e : bdf312           	jsr		Moveto_d
+0121 : 8e06ab           	ldx		#Arrow		
+0124 : bdf3ce           	jsr 	Draw_VLc
+0127 : 39               	rts
+                        ;
+                        
+0128 :                  arrow_in_bounds
+                        ; start of arrow bounds checking 	
+                        ; x test
+0128 : b6c890           	lda		arrow_x
+AS09 Assembler for M6809 [1.42].                                     Page   10
+----------------------------- Spudster's Revenge -----------------------------
+
+012b : 8181             	cmpa	#-127
+012d : 2602             	bne		x_ok
+012f : 8d88             	bsr		arrow_create
+0131 :                  x_ok
+                        ; y test
+0131 : b6c88f           	lda		arrow_y
+0134 : 2a02             	bpl		y_ok
+0136 : 8d81             	bsr		arrow_create
+0138 :                  y_ok
+0138 : 39               	rts
+                        
+                        ; end of arrow bounds checking
+0139 :                  draw_post
+0139 : 867f             	lda		#127
+013b : bd0414           	jsr		set_scale	
+013e : cc0000           	ldd		#0
+0141 : bdf312           	jsr		Moveto_d
+0144 : bdf2a1           	jsr		Intensity_3F
+0147 : 8e0621           	ldx		#Post	
+014a : bdf410           	jsr 	Draw_VLp
+014d : 39               	rts
+                        ;
+014e :                  draw_molly
+014e : 8653             	lda		#83
+0150 : bd0414           	jsr 	set_scale 	
+0153 : 8e0634           	ldx		#Molly	
+0156 : bdf410           	jsr 	Draw_VLp
+0159 : 39               	rts
+                        ;
+015a :                  draw_mollysface
+                        ; TODO
+                        ; include bow animation?
+015a : 867f             	lda 	#127
+015c : bd0414           	jsr		set_scale
+015f : 8e06a3           	ldx		#MollysFace
+0162 : b6c88c           	lda 	mollystate   	; if state !=1
+0165 : 2703             	beq		nothumpedface	; branch
+0167 : 8e06a7           	ldx		#MollysFaceHum
+016a :                  nothumpedface
+016a : bdf410           	jsr		Draw_VLp
+016d : 39               	rts
+                        ;
+016e :                  draw_mollyslegs
+016e : 8e066e           	ldx		#MollysLegs
+0171 : b6c88c           	lda 	mollystate   ; if state !=1
+0174 : 2706             	beq		nothumpeds	 ; branch
+0176 : 8e068a           	ldx		#MollysLegsHum
+0179 : 7ac88c           	dec		mollystate
+017c :                  nothumpeds
+017c : 8653             	lda 	#83
+017e : bd0414           	jsr		set_scale
+0181 : bdf410           	jsr		Draw_VLp
+0184 : 39               	rts
+                        ;
+                        
+0185 :                  draw_spud
+0185 : 867f             	lda		#127	
+0187 : bd0414           	jsr 	set_scale 	
+018a : bdf36b           	jsr		Reset0Int
+018d : b6c889           	lda		spud_ypos
+0190 : f6c88a           	ldb		spud_xpos
+0193 : bdf312           	jsr 	Moveto_d
+AS09 Assembler for M6809 [1.42].                                     Page   11
+----------------------------- Spudster's Revenge -----------------------------
+
+0196 : 8e04a5           	ldx		#Spud	
+0199 : b6c88b           	lda 	spudstate   	; if state !=1
+019c : 2703             	beq		nothumpedspud	; branch
+019e : 8e0500           	ldx		#SpudHump
+01a1 :                  nothumpedspud
+01a1 : bdf410           	jsr 	Draw_VLp
+01a4 : 39               	rts
+                        ;
+01a5 :                  draw_spudslegs		; wip
+01a5 : 867f             	lda 	#127
+01a7 : bd0414           	jsr		set_scale
+01aa : 8e05b7           	ldx		#SpudsLegsWalk1
+01ad : b6c88a           	lda		spud_xpos
+01b0 : 8401             	anda	#%000000001  ; mask 1 bit testing for odd number
+01b2 : 2603             	bne		walk1
+01b4 : 8e05d6           	ldx		#SpudsLegsWalk2
+01b7 :                  walk1
+01b7 : b6c88b           	lda 	spudstate   ; if state !=1
+01ba : 2706             	beq		nothumping	 ; branch
+01bc : 8e0608           	ldx		#SpudsLegsHum
+01bf : 7ac88b           	dec		spudstate
+01c2 :                  nothumping
+01c2 : bdf410           	jsr		Draw_VLp
+01c5 : 39               	rts
+                        ;
+01c6 :                  sound_update
+                        ; TODO
+01c6 : 39               	rts
+                        ;
+                        
+01c7 :                  move_arrow 
+01c7 : 7ac890           	dec		arrow_x
+01ca : 7ac88f           	dec		arrow_y
+01cd : 39               	rts
+                        ;
+01ce :                  button_push
+                        	
+01ce : 39               	rts
+                        ;
+                        
+01cf :                  joystick_crap
+01cf : bdf1f8           	jsr		Joy_Digital
+01d2 : b6c81b           	lda     Vec_Joy_1_X  
+01d5 : 2724             	beq		done_moving		;end
+01d7 : 2b11             	bmi		going_left
+                        ;
+01d9 :                  going_right
+01d9 : b6c88a           	lda 	spud_xpos
+01dc : 8137             	cmpa	#55
+01de : 2c1b             	bge		done_moving 		; if >= 52 don't move.
+01e0 : b6c88a           	lda 	spud_xpos
+01e3 : 8b03             	adda	#3
+01e5 : b7c88a           	sta		spud_xpos
+01e8 : 2011             	bra		done_moving		
+                        ;
+01ea :                  going_left
+01ea : b6c88a           	lda		spud_xpos
+01ed : 8181             	cmpa	#-127
+01ef : 270a             	beq		done_moving
+01f1 : b6c88a           	lda		spud_xpos
+01f4 : 8003             	suba	#3
+01f6 : b7c88a           	sta		spud_xpos
+AS09 Assembler for M6809 [1.42].                                     Page   12
+----------------------------- Spudster's Revenge -----------------------------
+
+01f9 : 2000             	bra		done_moving
+01fb :                  done_moving
+01fb : 39               	rts
+                        ;
+                        
+                        ; 	Lost a guy ...
+01fc :                  got_hit
+01fc : 7ac888           	dec		spuds_left
+01ff : 867f             	lda		#127
+0201 : b7c895           	sta		count
+0204 : 7cc88b           	inc		spudstate
+                        ;play sound
+                        ;   ldx #ploop
+                        ;   stx sfx_pointer
+                        ;   lda #$01
+                        ;   sta sfx_status
+                        	
+                        ;
+0207 :                  loopy
+                        ;	jsr sfx_doframe
+0207 : bdf192           	jsr Wait_Recal
+                        
+                        
+020a : 867f             	lda		#127	
+020c : bd0414           	jsr 	set_scale 	
+020f : bdf2a5           	jsr 	Intensity_5F
+0212 : 861e             	lda		#30
+0214 : c6e5             	ldb		#-27
+0216 : bdf312           	jsr 	Moveto_d
+0219 : 8e0742           	ldx		#letter_O	
+021c : bdf410           	jsr 	Draw_VLp
+021f : bdf354           	jsr		Reset0Ref
+0222 : 861e             	lda		#30
+0224 : c628             	ldb		#40
+0226 : bdf312           	jsr 	Moveto_d
+0229 : 8e075e           	ldx		#letter_W
+022c : bdf410           	jsr 	Draw_VLp
+                        
+022f : 86f6             	lda		#-10
+0231 : c660             	ldb		#96
+0233 : fdc82a           	std		Vec_Text_HW
+0236 : ce0704           	ldu		#owstr	
+0239 : 8600             	lda 	#0
+023b : c624             	ldb		#36	
+023d : bdf37a           	jsr 	Print_Str_d 	 
+                        ; shrink spud	
+0240 : 867f             	lda		#127
+0242 : bd0414           	jsr 	set_scale 	
+0245 : b6c889           	lda		spud_ypos
+0248 : f6c88a           	ldb		spud_xpos
+024b : bdf312           	jsr 	Moveto_d
+024e : b6c895           	lda		count
+0251 : bd0414           	jsr 	set_scale 	
+0254 : 8e0555           	ldx		#SpudDead
+0257 : bdf410           	jsr 	Draw_VLp
+                        ;	jsr		Reset0Ref
+025a : b6c895           	lda		count
+025d : bd0414           	jsr 	set_scale 	
+                        ;	lda		spud_ypos
+                        ;	ldb		spud_xpos
+                        ;	jsr 	Moveto_d
+0260 : 8e05d6           	ldx		#SpudsLegsWalk2
+AS09 Assembler for M6809 [1.42].                                     Page   13
+----------------------------- Spudster's Revenge -----------------------------
+
+0263 : bdf410           	jsr 	Draw_VLp
+                        
+0266 : 7ac895           	dec		count
+0269 : 7ac895           	dec		count
+026c : 7ac895           	dec		count
+026f : 7ac895           	dec		count
+0272 : 7ac895           	dec		count
+0275 : 7ac895           	dec		count
+0278 : 2b02             	bmi		deadcont
+027a : 268b             	bne 	loopy  ; loop
+027c :                  deadcont
+027c : 8614             	lda		#20		; reload counter
+027e : b7c895           	sta		count
+0281 :                  deadStar
+0281 : bdf192           	jsr 	Wait_Recal
+0284 : 867f             	lda		#127
+0286 : bd0414           	jsr 	set_scale 	
+0289 : b6c889           	lda		spud_ypos
+028c : f6c88a           	ldb		spud_xpos
+028f : bdf312           	jsr 	Moveto_d
+0292 : bdf2a1           	jsr		Intensity_3F
+0295 : 867f             	lda		#127
+0297 : bd0414           	jsr 	set_scale 	
+029a : 8e05a7           	ldx 	#SpudDeadFinal
+029d : bdf410           	jsr		Draw_VLp
+02a0 : 7ac895           	dec 	count
+02a3 : 26dc             	bne		deadStar
+                        ; reset spud position
+02a5 : b6c88d           	lda		spud_start
+02a8 : b7c88a           	sta		spud_xpos
+02ab : 39               	rts
+                        ;
+02ac :                  gameoverloop
+02ac : bdf192           	jsr 	Wait_Recal
+02af : bdf2a1           	jsr 	Intensity_3F
+02b2 : ce070a           	ldu		#gameoverstr
+02b5 : 860a             	lda		#10
+02b7 : c6ce             	ldb		#206
+02b9 : bdf37a           	jsr 	Print_Str_d 
+02bc : bd00c5           	jsr		show_score
+02bf : 8ec880           	ldx		#score			; update highscore if needed
+02c2 : cec89d           	ldu		#highscore
+02c5 : bdf8d8           	jsr		New_High_Score
+02c8 : ce06f9           	ldu		#highscorestr
+02cb : 867f             	lda		#127
+02cd : c6ce             	ldb		#206
+02cf : bdf37a           	jsr 	Print_Str_d   	; print highscore label
+02d2 : bd00d0           	jsr		show_highscore
+02d5 : 8e072a           	ldx		#lolscore
+02d8 : cec880           	ldu		#score
+02db : bdf8c7           	jsr		Compare_Score
+02de : 8100             	cmpa	#0
+02e0 : 271b             	beq		lol
+02e2 : f600ff           	ldb		$FF				; pause a little before taking button inp
+02e5 : bdf57a           	jsr		Delay_b
+02e8 : bdf1ba           	jsr 	Read_Btns
+02eb : b6c812           	lda     Vec_Button_1_1
+02ee : bac813           	ora     Vec_Button_1_2
+02f1 : bac814           	ora		Vec_Button_1_3
+02f4 : bac815           	ora		Vec_Button_1_4
+02f7 : 1026fd2d         	lbne	restart
+02fb : 20af             	bra		gameoverloop
+AS09 Assembler for M6809 [1.42].                                     Page   14
+----------------------------- Spudster's Revenge -----------------------------
+
+                        ;
+02fd :                  lol	
+02fd : ce0731           	ldu		#lolstring
+0300 : 860a             	lda		#10
+0302 : c6ce             	ldb		#206
+0304 : bdf37a           	jsr 	Print_Str_d 
+0307 : 867f             	lda 	#127
+0309 : bd0414           	jsr		set_scale
+030c : 8e0738           	ldx		#lolgraphic
+030f : bdf410           	jsr		Draw_VLp
+0312 : 20e9             	bra		lol
+0314 : 39               	rts
+                        	
+                        	
+                        ;
+0315 :                  titlescreen
+0315 : 8600             	lda		#0
+0317 : bdf1b4           	jsr		Read_Btns_Mask
+031a : b6c812           	lda		Vec_Button_1_1
+031d : 1026fd10         	bne 	main	
+0321 : b6c813            	lda     Vec_Button_1_2
+0324 : 270d                	beq    	no_btn_psh
+0326 : b6c814              	lda     Vec_Button_1_3
+0329 : 2708                	beq    	no_btn_psh
+032b : b6c815              	lda     Vec_Button_1_4
+032e : 2703                	beq    	no_btn_psh
+0330 : 7e03e2              	jmp     hidden_msg          ; all 3 buttons pushed
+                        ;
+0333 :                  no_btn_psh
+0333 : 4f               	clra
+0334 : 5f               	clrb
+0335 : bdf192           	jsr		Wait_Recal
+0338 : bdf2a5           	jsr		Intensity_5F
+033b : ce06ba           	ldu		#titlestring
+033e : 8630             	lda		#$30
+0340 : c690             	ldb		#-$70
+0342 : bdf37a           	jsr		Print_Str_d
+                        ;
+                        ;; start variable intensity routine NEED 2 FIX
+0345 : b6c892           	lda		brightdir		; Load variable saying which
+0348 : 260c             	bne		up			; direction we're going & test
+034a :                  down	
+034a : 7ac891           	dec		intlevel		; load the 'level' of bright
+034d : b6c891           	lda		intlevel		
+0350 : 8114             	cmpa	#MINBRIGHT		;compare it to our threshhold
+0352 : 270e             	beq		changedir2up		; if yes: 
+0354 : 2018             	bra		finish_pulse
+                        ;
+0356 :                  up
+0356 : 7cc891           	inc		intlevel
+0359 : b6c891           	lda		intlevel
+035c : 8164             	cmpa	#MAXBRIGHT
+035e : 2709             	beq		changedir2down
+0360 : 200c             	bra		finish_pulse
+                        ;
+0362 :                  changedir2up
+0362 : 8601             	lda		#1
+0364 : b7c892           	sta		brightdir
+0367 : 2005             	bra		finish_pulse
+                        ;
+0369 :                  changedir2down
+0369 : 8600             	lda		#0
+AS09 Assembler for M6809 [1.42].                                     Page   15
+----------------------------- Spudster's Revenge -----------------------------
+
+036b : b7c892           	sta		brightdir
+                        ;
+036e :                  finish_pulse
+036e : b6c891           	lda		intlevel
+0371 : bdf2ab           	jsr		Intensity_a		; set intensity here
+                        ; end intensity routine
+0374 : ce06cd           	ldu		#startstring
+0377 : 86ce             	lda		#-50
+0379 : c692             	ldb		#-110
+037b : bdf37a           	jsr		Print_Str_d
+037e : 2095             	bra 	titlescreen	; if not pushed ... loop
+0380 : 39               	rts
+                        
+                        ;
+0381 :                  play_song
+0381 : c601             	ldb		#1	;movqi: #1 -> R:b
+0383 : bffef8           	stx		current_song	;movhi: R:x -> _current_song
+0386 : b7c892           	sta		brightdir			; direction 0 down 1 up 
+0389 : bdf289           	jsr		Do_Sound
+038c : 39               	rts		; return from function
+                        ;
+038d :                  setup
+038d : 8601             	lda 	#1 	; enable  joystick 1's x axis, disable all o
+038f : b7c81f           	sta 	Vec_Joy_Mux_1_X 	
+0392 : 8ec89d           	ldx 	#highscore
+0395 : bdf84f           	jsr		Clear_Score ; Bios routine yay
+0398 : 860a             	lda		#10
+039a : b7c891           	sta		intlevel			; intensity level
+039d : 8600             	lda 	#0 				; disable for Joy Mux's
+039f : b7c820           	sta 	Vec_Joy_Mux_1_Y
+03a2 : b7c821           	sta 	Vec_Joy_Mux_2_X
+03a5 : b7c822           	sta 	Vec_Joy_Mux_2_Y
+03a8 : bdf1f8           	jsr 	Joy_Digital 	; set joymode, not analog.
+03ab : 8600             	lda 	#0
+                        ;	jsr		vox_init
+                        	;jsr 	Read_Btns		; no idea why this is here.
+                        	;jsr 	Wait_Recal
+03ad : 39               	rts		; return from function
+                        
+                        ;
+03ae :                  start
+03ae : 8603             	lda 	#3
+03b0 : b7c888           	sta 	spuds_left
+03b3 : 8ec880           	ldx 	#score
+03b6 : bdf84f           	jsr		Clear_Score
+03b9 : 8600             	lda		#0
+03bb : b7c88b           	sta 	spudstate
+03be : b7c88c           	sta 	mollystate
+03c1 : cc0000           	ldd 	#0
+03c4 : fdc896           	std		dec_score
+03c7 : 8601             	lda 	#1	
+03c9 : b7c887           	sta 	level
+03cc : 8e07a5               ldx     #time_frames ; setting initial frame count
+03cf : a686                 lda     a,x
+03d1 : b7c8a9               sta     currentframe    ; ^^
+03d4 : 8681             	lda		#-127
+03d6 : b7c88d           	sta		spud_start
+03d9 : b7c88a           	sta 	spud_xpos
+03dc : 8614             	lda		#20
+03de : b7c889           	sta		spud_ypos
+03e1 : 39               	rts
+                        
+AS09 Assembler for M6809 [1.42].                                     Page   16
+----------------------------- Spudster's Revenge -----------------------------
+
+                        ; show hidden msg requires reset to escape
+03e2 :                  hidden_msg
+03e2 : bdf2a1           	jsr		Intensity_3F
+03e5 : bdf192           	jsr		Wait_Recal
+03e8 : ce06de           	ldu		#hidden1str
+03eb : 8600             	lda		#0			
+03ed : c6c4             	ldb		#-60	
+03ef : bdf37a           	jsr 	Print_Str_d 	
+03f2 : ce06e9           	ldu		#hidden2str	
+03f5 : 86ec             	lda		#-20	
+03f7 : c6b4             	ldb		#-76
+03f9 : bdf37a           	jsr 	Print_Str_d 
+03fc : 20e4             	bra		hidden_msg ; no escape
+                        ;
+                        ;start_one_vectrex_round
+                        ;	ldb		#200	;movqi: #200 -> R:b
+                        ;	tfr 	b,dp 	; set dp to b (dp is direct page reg)
+                        ;	pshs 	y 	; save y register to HW stack
+                        ;	ldu		current_song	;movhi: _current_song -> R:u
+                        ;	jsr 	Init_Music_chk
+                        ;	puls 	y 	; restore y register
+                        ;	jsr 	Wait_Recal 	; wait_recal
+                        ;	jsr 	Do_Sound 	; do_sound
+                        ;	rts		; return from function
+                        
+03fe :                  guys_left 	; display number of 'guys' left
+03fe : bdf2a1           	jsr		Intensity_3F
+0401 : 86f6             	lda		#-10 	; fix
+0403 : c641             	ldb		#65 	; change
+0405 : fdc893           	std		coord
+0408 : 8669             	lda		#$69
+040a : f6c888           	ldb		spuds_left	
+040d : bec893           	ldx 	coord
+0410 : bdf393           	jsr		Print_Ships
+0413 : 39               	rts
+                        ;
+0414 :                  set_scale		;scales to content of reg A
+0414 : b7d004           	sta		$D004	; VIA t1 cnt lo register.
+0417 : 39               	rts
+                        
+                        
+                        	include	"sfx.asm"
+                        ;sfx_pointer	EQU	$c880		
+                        ;sfx_status	EQU	$c882	
+                        
+                        ;    LDX #sfx4					; play sfx4
+                        ;	STX sfx_pointer
+                        ;	LDA #$01
+                        ;	STA sfx_status   
+                        
+0418 :                  sfx_doframe:
+0418 : fec8a5           	ldu sfx_pointer				; get current frame pointer
+041b : e6c4             	ldb ,u
+041d : c1d0             	cmpb #$D0					; check first flag byte D0
+041f : 2606             	bne sfx_checktonefreq		; no match - continue to proce
+0421 : e641             	ldb 1,u
+0423 : c120             	cmpb #$20					; check second flag byte 20
+0425 : 276d             	beq sfx_endofeffect			; match - end of effect found s
+                        
+0427 :                  sfx_checktonefreq:
+0427 : 3141             	leay 1,u 					; init Y as pointer to next data or fla
+                        
+AS09 Assembler for M6809 [1.42].                                     Page   17
+----------------------------- Spudster's Revenge -----------------------------
+
+0429 : e6c4             	ldb ,u 						; check if need to set tone freq
+042b : c520             	bitb #%00100000				; if bit 5 of B is set
+042d : 2710             	beq sfx_checknoisefreq			; skip as no tone freq data
+                        
+042f : e641             	ldb 1,u						; get next data byte and copy to tone fr
+0431 : 8604              	lda #$04
+0433 : bdf256            	jsr Sound_Byte 				; set tone freq
+                        
+0436 : e642             	ldb 2,u						; get next data byte and copy to tone fr
+0438 : 8605              	lda #$05
+043a : bdf256            	jsr Sound_Byte 				; set tone freq
+                        
+043d : 3122             	leay 2,y					; increment pointer to next data/flag by
+                        
+043f :                  sfx_checknoisefreq:
+043f : e6c4             	ldb ,u						; check if need to set noise freq
+0441 : c540             	bitb #%01000000				; if bit 6 of B is only set
+0443 : 2709             	beq	sfx_checkvolume				; skip as no noise freq data
+                        
+0445 : e6a4             	ldb ,y						; get next data byte and copy to noise fr
+0447 : 8606             	lda #$06
+0449 : bdf256           	jsr Sound_Byte 				; set noise freq
+                        
+044c : 3121             	leay 1,y					; increment pointer to next flag byte
+                        
+044e :                  sfx_checkvolume:
+044e : e6c4             	ldb ,u						; set volume on channel 3		
+0450 : c40f             	andb #%00001111				; get volume from bits 0-3
+0452 : 860a             	lda #$0A              		; set reg10
+0454 : bdf256           	jsr Sound_Byte 				; Set volume
+                        
+0457 :                  sfx_checktonedisable:
+0457 : e6c4             	ldb ,u						; check disable tone channel 3
+0459 : c510             	bitb #%00010000				; if bit 4 of B is set disable the
+045b : 270c             	beq sfx_enabletone
+045d :                  sfx_disabletone:
+045d : f6c807           	ldb $C807					; set bit2 in reg7
+0460 : ca04             	orb #%00000100		
+0462 : 8607             	lda #$07
+0464 : bdf256            	jsr Sound_Byte 				; disable tone
+0467 : 200a             	bra sfx_checknoisedisable
+0469 :                  sfx_enabletone:
+0469 : f6c807           	ldb $C807					; clear bit2 in reg7
+046c : c4fb             	andb #%11111011	
+046e : 8607             	lda #$07
+0470 : bdf256            	jsr Sound_Byte 				; enable tone
+                        							
+0473 :                  sfx_checknoisedisable:
+0473 : e6c4             	ldb ,u						; check disable noise
+0475 : c580             	bitb #%10000000				; if bit7 of B is set disable nois
+0477 : 270c             	beq sfx_enablenoise
+0479 :                  sfx_disablenoise:
+0479 : f6c807           	ldb $C807					; set bit5 in reg7
+047c : ca20             	orb #%00100000
+047e : 8607             	lda #$07
+0480 : bdf256            	jsr Sound_Byte 				; disable noise
+0483 : 200a             	bra sfx_nextframe
+0485 :                  sfx_enablenoise:
+0485 : f6c807           	ldb $C807					; clear bit5 in reg 7
+0488 : c4df             	andb #%11011111		
+048a : 8607             	lda #$07
+048c : bdf256            	jsr Sound_Byte				; enable noise
+AS09 Assembler for M6809 [1.42].                                     Page   18
+----------------------------- Spudster's Revenge -----------------------------
+
+                        
+048f :                  sfx_nextframe:
+048f : 10bfc8a5         	sty sfx_pointer				; update frame pointer to next fla
+0493 : 39               	rts
+                        
+0494 :                  sfx_endofeffect:
+                        
+0494 : c600             	ldb #$00					; set volume off channel 3	
+0496 : 860a             	lda #$0A              		; set reg1sf0
+0498 : bdf256           	jsr Sound_Byte 				; Set volume
+                        
+049b : cc0000           	ldd #$0000 					; reset sfx
+049e : fdc8a5           	std	sfx_pointer
+04a1 : b7c8a6           	sta sfx_status
+04a4 : 39               	rts
+                        
+                        
+                        ;&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+                        ;			 DATA SECTION
+                        ;*****************************************************
+                        	include "data.i"
+                        ; DATA section
+04a5 :                  Spud
+04a5 : 0100f7           	fcb 1, 0, -9		; BODY crotch (should start here)
+04a8 : ff19f9           	fcb -1, 25, -7	; left ribs
+04ab : ff0606           	fcb -1, 6, 6	; left ear
+04ae : ff000c           	fcb -1, 0, 12	; top of head
+04b1 : fffa06           	fcb -1, -6, 6  ; right ear
+04b4 : ffe7f9           	fcb -1, -25, -7	; right ribs
+04b7 : 0019f1           	fcb 0, 25, -15 	; relocate to left ear ...
+                        
+04ba : 00ff08           	fcb 0, -1, 8	; eyes
+04bd : fffc04           	fcb -1, -4, 4
+04c0 : ff0404           	fcb -1, 4, 4
+04c3 : fffdfd           	fcb -1, -3, -3 
+04c6 : fffe00           	fcb -1, -2, 0
+04c9 : ff0200           	fcb -1, 2, 0
+04cc : ffffff           	fcb -1, -1, -1
+04cf : ff01ff           	fcb -1, 1, -1
+04d2 : fffe00           	fcb -1, -2, 0
+04d5 : 00ec03           	fcb 0, -20, 3	; DICK
+04d8 : fffeff           	fcb -1, -2, -1
+04db : ffff02           	fcb -1, -1, 2
+04de : ff0508           	fcb -1, 5, 8
+04e1 : ff0201           	fcb -1, 2, 1
+04e4 : fffffd           	fcb -1, -1, -3
+04e7 : fffefc           	fcb -1, -2, -4
+04ea : 000af7           	fcb 0, 10, -9 	; mouth
+04ed : ff0007           	fcb -1, 0, 7
+04f0 : fffdff           	fcb -1, -3, -1
+04f3 : ff03ff           	fcb -1, 3, -1
+04f6 : ff00fa           	fcb -1, 0, -6
+04f9 : fffd01           	fcb -1, -3, 1
+04fc : ff0301           	fcb -1, 3, 1
+04ff : 01               	fcb 1 
+0500 :                  SpudHump ; needs work
+0500 : 0100f7           	fcb 1, 0, -9		; BODY crotch (should start here)
+0503 : ff19f9           	fcb -1, 25, -7	; left ribs
+0506 : ff0606           	fcb -1, 6, 6	; left ear
+0509 : ff000c           	fcb -1, 0, 12	; top of head
+050c : fffa06           	fcb -1, -6, 6  ; right ear
+050f : ffe7f9           	fcb -1, -25, -7	; right ribs
+AS09 Assembler for M6809 [1.42].                                     Page   19
+----------------------------- Spudster's Revenge -----------------------------
+
+0512 : 0019f1           	fcb 0, 25, -15 	; relocate to left ear ...
+0515 : 00ff08           	fcb 0, -1, 8 	; eyes
+0518 : fffc04           	fcb -1, -4, 4
+051b : ff0404           	fcb -1, 4, 4
+051e : fffdfd           	fcb -1, -3, -3
+0521 : fffe00           	fcb -1, -2, 0
+0524 : ff0200           	fcb -1, 2, 0
+0527 : ffffff           	fcb -1, -1, -1
+052a : ff01ff           	fcb -1, 1, -1
+052d : fffe00           	fcb -1, -2, 0
+0530 : 00ec03           	fcb 0, -20, 3 	; diiiiick
+0533 : fffeff           	fcb -1, -2, -1
+0536 : ffff02           	fcb -1, -1, 2
+0539 : ff0510           	fcb -1, 5, 16
+053c : ff0201           	fcb -1, 2, 1
+053f : fffff8           	fcb -1, -1, -8
+0542 : fffef7           	fcb -1, -2, -9
+0545 : 000af7           	fcb 0, 10, -9	; mouth
+0548 : ff0007           	fcb -1, 0, 7
+054b : ff0300           	fcb -1, 3, 0
+054e : ff00f9           	fcb -1, 0, -7
+0551 : fffd00           	fcb -1, -3, 0
+0554 : 01               	fcb 1 
+0555 :                  SpudDead
+0555 : 0100f7           	fcb 1, 0, -9		; BODY crotch (should start here)
+0558 : ff19f9           	fcb -1, 25, -7	; left ribs
+055b : ff0606           	fcb -1, 6, 6	; left ear
+055e : ff000c           	fcb -1, 0, 12	; top of head
+0561 : fffa06           	fcb -1, -6, 6  ; right ear
+0564 : ffe7f9           	fcb -1, -25, -7	; right ribs
+0567 : 0019f1           	fcb 0, 25, -15 	; relocate to left ear ...
+                        
+056a : 00ff04           	fcb 0, -1, 4	; eyes
+056d : fffc04           	fcb -1, -4, 4
+0570 : 0000fc           	fcb 0, 0, -4
+0573 : ff0404           	fcb -1, 4, 4 
+0576 : 000004           	fcb 0, 0, 4
+0579 : fffc04           	fcb -1, -4, 4
+057c : 0000fc           	fcb 0, 0, -4
+057f : ff0404           	fcb -1, 4, 4 
+0582 : 00ec03           	fcb 0, -20, 3	; DICK
+0585 : fffeff           	fcb -1, -2, -1
+0588 : ffff02           	fcb -1, -1, 2
+058b : ff0508           	fcb -1, 5, 8
+058e : ff0201           	fcb -1, 2, 1
+0591 : fffffd           	fcb -1, -1, -3
+0594 : fffefc           	fcb -1, -2, -4
+0597 : 000af7           	fcb 0, 10, -9 	; mouth
+059a : ff0007           	fcb -1, 0, 7
+059d : ff0300           	fcb -1, 3, 0
+05a0 : ff00fa           	fcb -1, 0, -6
+05a3 : fffd00           	fcb -1, -3, 0
+05a6 : 01               	fcb 1 
+05a7 :                  SpudDeadFinal
+05a7 : ff0400           	fcb -1, 4, 0
+05aa : 00fe02           	fcb  0, -2, 2
+05ad : ff00fc           	fcb -1,	0, -4
+05b0 : 00fe00           	fcb  0, -2, 0
+05b3 : ff0404           	fcb -1, 4, 4
+05b6 : 01               	fcb 1
+05b7 :                  SpudsLegsWalk1
+05b7 : 00f6fc           	fcb 0, -10, -4
+AS09 Assembler for M6809 [1.42].                                     Page   20
+----------------------------- Spudster's Revenge -----------------------------
+
+05ba : ffec00           	fcb -1, -20, 0 ; left leg
+05bd : ff00f6           	fcb -1, 0, -10 ; foot
+05c0 : ff0a00           	fcb -1, 10, 0	; foot
+05c3 : fff60a           	fcb -1, -10, 10 ; foot
+05c6 : 00140a           	fcb 0, 20, 10   ; reset
+05c9 : ffec00           	fcb -1, -20, 0  ; right leg
+05cc : ff000a           	fcb -1, 0, 10	; foot
+05cf : ff0a00           	fcb -1, 10, 0	; foot
+05d2 : fff6f6           	fcb -1, -10, -10 ; foot
+05d5 : 01               	fcb 1 
+05d6 :                  SpudsLegsWalk2
+05d6 : 00f6fc           	fcb 0 , -10 , -4
+05d9 : fff1f1           	fcb -1 , -15 , -15
+05dc : ff07f9           	fcb -1 , 7 , -7
+05df : ff000c           	fcb -1 , 0 , 12
+05e2 : 000819           	fcb 0 , 8 ,25
+05e5 : fff10f           	fcb -1 , -15 , 15
+05e8 : ff0707           	fcb -1 , 7 , 7
+05eb : ff00f4           	fcb -1 , 0 , -12
+05ee : 01               	fcb 1 
+05ef :                  SpudsLegsWalk3  		; TODO
+05ef : 00ec00           	fcb 0 , -20 , 0
+05f2 : fff1f1           	fcb -1 , -15 , -15
+05f5 : ff07f9           	fcb -1 , 7 , -7
+05f8 : ff000c           	fcb -1 , 0 , 12
+05fb : 000819           	fcb 0 , 8 ,25
+05fe : fff10f           	fcb -1 , -15 , 15
+0601 : ff0707           	fcb -1 , 7 , 7
+0604 : ff00f4           	fcb -1 , 0 , -12
+0607 : 01               	fcb 1 
+0608 :                  SpudsLegsHum 
+0608 : 00f6fc           	fcb 0 , -10 , -4
+060b : fff1f1           	fcb -1 , -15 , -15
+060e : ff07f9           	fcb -1 , 7 , -7
+0611 : ff000c           	fcb -1 , 0 , 12
+0614 : 000819           	fcb 0 , 8 ,25
+0617 : fff10f           	fcb -1 , -15 , 15
+061a : ff0707           	fcb -1 , 7 , 7
+061d : ff00f4           	fcb -1 , 0 , -12
+0620 : 01               	fcb 1 
+0621 :                  Post 
+0621 : 000084           	fcb 0,0, -124
+0624 : ff007c           	fcb -1,0, 124
+0627 : ff007c           	fcb -1,0, 124
+062a : ff5000           	fcb -1,80, 0
+062d : ff00f1           	fcb -1,0, -15
+0630 : ffb100           	fcb -1,-79, 0
+0633 : 01               	fcb	1
+0634 :                  Molly 
+0634 : 0018fc           	fcb 0, 24, -4 ; from bottom of post
+0637 : ff00de           	fcb -1, 0, -34 ; bottom of skirt
+063a : ff0704           	fcb -1, 7, 4   ; left hem
+063d : ff001a           	fcb -1, 0, 26	; hem line
+0640 : fff904           	fcb -1, -7, 4	; right hem
+0643 : ff17f3           	fcb -1, 23, -13	; dress right
+0646 : fff5f9           	fcb -1, -11, -7 ; head 5
+0649 : ff0bf2           	fcb -1, 11, -14; head 6
+064c : ff01f3           	fcb -1, 1, -13 ; head 7
+064f : ff0c0c           	fcb -1, 12, 12 ; head 8
+0652 : ff12fc           	fcb -1, 18, -4 ; head 9
+0655 : fffb0f           	fcb -1, -5, 15 ; head 10
+0658 : ff0f0b           	fcb -1, 15, 11 ; head 11
+AS09 Assembler for M6809 [1.42].                                     Page   21
+----------------------------- Spudster's Revenge -----------------------------
+
+065b : ffeb01           	fcb -1, -21, 1 ; head 12
+065e : fff70d           	fcb -1, -9, 13	;	head 3oclock 
+0661 : fff5f1           	fcb -1, -11, -15 ; head 4oclock
+0664 : 00f9f3           	fcb 0, -7, -13 ; invisible normally neckline
+0667 : fff7fd           	fcb -1, -9, -3  ; left dress
+066a : fff8fc           	fcb -1, -8, -4  ; left hem
+066d : 01               	fcb 1
+066e :                  MollysLegs
+066e : 000008           	fcb 0, 0, 8
+0671 : ffec00           	fcb -1, -20, 0
+0674 : ff00f6           	fcb -1, 0, -10
+0677 : ff0a0a           	fcb -1, 10, 10
+067a : ff0a00           	fcb -1, 10, 0
+067d : 00000a           	fcb 0, 0, 10
+0680 : ffec00           	fcb -1, -20, 0
+0683 : ff000a           	fcb -1, 0, 10
+0686 : ff0af6           	fcb -1, 10, -10
+0689 : 01               	fcb 1 
+068a :                  MollysLegsHum 
+068a : 000008           	fcb 0 , 0 , 8
+068d : fff1f1           	fcb -1 , -15 , -15
+0690 : ff07f9           	fcb -1 , 7 , -7
+0693 : ff000c           	fcb -1 , 0 , 12
+0696 : 000819           	fcb 0 , 8 ,25
+0699 : fff10f           	fcb -1 , -15 , 15
+069c : ff0707           	fcb -1 , 7 , 7
+069f : ff00f4           	fcb -1 , 0 , -12
+06a2 : 01               	fcb 1
+06a3 :                  MollysFace
+06a3 : 000000           	fcb 0, 0, 0
+06a6 : 01               	fcb 1
+06a7 :                  MollysFaceHum
+06a7 : 000000           	fcb 0, 0, 0
+06aa : 01               	fcb 1
+06ab :                  Arrow		; only one not it 0x01 terminated format
+06ab : 06               	fcb  6
+06ac : 00fc             	fcb 0,-4
+06ae : 0400             	fcb 4,0 
+06b0 : fc00             	fcb -4,0 
+06b2 : 0c0c             	fcb 12,12
+06b4 : 0004             	fcb 0,4 
+06b6 : 00fc             	fcb 0,-4 
+06b8 : 0400             	fcb 4,0 
+                        ; TEXT DATA
+06ba :                  titlestring
+06ba : 53505544535445.. 	fcc "SPUDSTER'S REVENGE"
+06cc : 80               	fcb 	$80
+06cd :                  startstring
+06cd : 50524553532031.. 	fcc "PRESS 1 TO START"
+06dd : 80               	fcb 	$80
+06de :                  hidden1str
+06de : 43524541544544.. 	fcc "CREATED BY"
+06e8 : 80               	fcb 	$80
+06e9 :                  hidden2str
+06e9 : 57415252454e20.. 	fcc "WARREN ROBINETT"
+06f8 : 80               	fcb 	$80
+06f9 :                  highscorestr
+06f9 : 48494748205343.. 	fcc "HIGH SCORE"
+0703 : 80               	fcb 	$80
+0704 :                  owstr
+0704 : 4f57212121       	fcc "OW!!!"
+0709 : 80               	fcb 	$80
+AS09 Assembler for M6809 [1.42].                                     Page   22
+----------------------------- Spudster's Revenge -----------------------------
+
+070a :                  gameoverstr
+070a : 47414d45204f56.. 	fcc "GAME OVER"
+0713 : 80               	fcb 	$80
+0714 :                  playagainstr
+0714 : 50524553532031.. 	fcc "PRESS 1 TO PLAY AGAIN"
+0729 : 80               	fcb 	$80
+072a :                  lolscore	
+072a : 202020203639     	fcc	"    69"
+0730 : 80               	fcb	$80
+0731 :                  lolstring
+0731 : 4c4f4c203639     	fcc	"LOL 69"	
+0737 : 80               	fcb	$80
+0738 :                  lolgraphic
+0738 : ff3232           	fcb	-1, 50,50
+073b : ffe719           	fcb	-1,	-25, 25 
+073e : ffcece           	fcb	-1, -50, -50
+0741 : 01               	fcb	1
+0742 :                  letter_O
+0742 : 005bda           	fcb 0,91,-38
+0745 : ffff48           	fcb -1,-1,72
+0748 : ffe517           	fcb -1,-27,23
+074b : ffa001           	fcb -1,-96,1
+074e : ffedde           	fcb -1,-19,-34
+0751 : ff03c4           	fcb -1,3,-60
+0754 : ff1eea           	fcb -1,30,-22
+0757 : ff4bfe           	fcb -1,75,-2
+075a : ff2315           	fcb -1,35,21
+075d : 01               	fcb 1
+075e :                  letter_W
+075e : 0041bf           	fcb 0,65,-65
+0761 : ffab28           	fcb -1,-85,40
+0764 : ff2b17           	fcb -1,43,23
+0767 : ffd823           	fcb -1,-40,35
+076a : ff612a           	fcb -1,97,42
+076d : 01               	fcb 1
+076e :                  abcd
+076e : 7e21402324255e.. 	fcc	"~!@#$%^&*()[]<>?:|abcdefghijklmnopqrstuvwxyz"
+079a : 80               	fcb		$80
+                        ; arrow speed table below, speed is distance of moveme
+079b : 00010103020503.. speed_distance: db  0,1,1,3,2,5,3,7,4,9
+07a5 : 00020102010201.. time_frames:	db  0,2,1,2,1,2,1,2,1,2
+07af :                  musa
+07af : fee8                 fdb    $fee8
+07b1 : fbe6                 fdb    $fbe6
+07b3 : 0080                 fcb    $0,$80
+07b5 : 0080                 fcb    $0,$80
+                        
+                        	include "sound2.asm"
+07b7 :                  ploop:
+07b7 : ef68011aef8a00..   fcb $EF,$68,$1,$1A,$EF,$8A,$0,$19,$AF,$D2
+07c1 : 00efdf0018af76..   fcb $0,$EF,$DF,$0,$18,$AF,$76,$1,$AF,$BC
+07cb : 01afe901af1002..   fcb $1,$AF,$E9,$1,$AF,$10,$2,$AF,$35,$0
+07d5 : af7302af9802af..   fcb $AF,$73,$2,$AF,$98,$2,$AF,$B2,$2,$AF
+07df : db02af0603ef54..   fcb $DB,$2,$AF,$6,$3,$EF,$54,$3,$19,$EF
+07e9 : 98031cef440319..   fcb $98,$3,$1C,$EF,$44,$3,$19,$EF,$7F,$2
+07f3 : 11eff30109ef94..   fcb $11,$EF,$F3,$1,$9,$EF,$94,$1,$6,$EF
+07fd : 4d0104ef130107..   fcb $4D,$1,$4,$EF,$13,$1,$7,$EF,$FF,$0
+0807 : 19efec001befdb..   fcb $19,$EF,$EC,$0,$1B,$EF,$DB,$0,$18,$AF
+0811 : ce00ef060717af..   fcb $CE,$0,$EF,$6,$7,$17,$AF,$29,$7,$EF
+081b : 700716afe1078f..   fcb $70,$7,$16,$AF,$E1,$7,$8F,$8F,$CF,$15
+0825 : 8fcf14ef380013..   fcb $8F,$CF,$14,$EF,$38,$0,$13,$AF,$19,$0
+082f : ef110012ef0f00..   fcb $EF,$11,$0,$12,$EF,$F,$0,$11,$AF,$E
+AS09 Assembler for M6809 [1.42].                                     Page   23
+----------------------------- Spudster's Revenge -----------------------------
+
+0839 : 00cf10af1000af..   fcb $0,$CF,$10,$AF,$10,$0,$AF,$14,$0,$EF
+0843 : 790000af7d00af..   fcb $79,$0,$0,$AF,$7D,$0,$AF,$28,$0,$AF
+084d : 1600af1300af10..   fcb $16,$0,$AF,$13,$0,$AF,$10,$0,$8F,$8F
+0857 : af1100af1300af..   fcb $AF,$11,$0,$AF,$13,$0,$AF,$14,$0,$AF
+0861 : 1700af1900af1c..   fcb $17,$0,$AF,$19,$0,$AF,$1C,$0,$AF,$20
+086b : 00af27008faf20..   fcb $0,$AF,$27,$0,$8F,$AF,$20,$0,$AF,$19
+0875 : 00af1300af0b00..   fcb $0,$AF,$13,$0,$AF,$B,$0,$D0,$20
+                        
+                        
+                        	end
+                        
+                        
+No errors in pass 2.
+Wrote binary from address $0000 through $087d.
+Total size 2174 bytes.
 
