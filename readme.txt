@@ -10,3 +10,7 @@ it for 10+ years.
 
 This game doesn't condone or encourage sexual violence against women 
 of any race, nor virtual beings.
+
+DO NOT USE THIS SRC!!! final version rests here:
+
+https://github.com/gauze/Spudster-s-Revenge
